@@ -17,7 +17,7 @@ import { plainToClass } from 'class-transformer';
 import { UpdateNilaiDto } from './dtos/update-nilai.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('nilai')
 @Serialize(NilaiDto)
 @ApiTags('nilai')
