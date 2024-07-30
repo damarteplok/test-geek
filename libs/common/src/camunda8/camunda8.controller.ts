@@ -8,13 +8,16 @@ import {
   FileTypeValidator,
   InternalServerErrorException,
   Body,
+  Get,
+  Param,
+  BadRequestException,
 } from '@nestjs/common';
 import { BpmnParserService, BpmnValidator } from '../bpmn';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MinioService } from '../minio/minio.service';
 import { SUCCESS, USERS_BUCKET } from '../constants';
 import { Camunda8Service } from './camunda8.service';
-import { SuccessResponseDto } from '../dto';
+import { SearchProcessDefinitionDto, SuccessResponseDto } from '../dto';
 
 @Controller('camunda')
 export class Camunda8Controller {
@@ -89,13 +92,40 @@ export class Camunda8Controller {
 
   @Post('crud')
   async createCrud(@Body() body: { modelName: string }) {
-    console.log(body.modelName);
     this.bpmnParserService.generateCrud(body.modelName);
     return { message: SUCCESS, STATUS_CODES: 200 };
   }
 
-  @Post('operate/process-definition')
-  async operateProcessDefinitionSearch() {
-    return this.camunda8Service.searchProcessDefinition();
+  @Post('operate/search/:type')
+  async operateProcessDefinitionSearch(
+    @Body() body: SearchProcessDefinitionDto,
+    @Param('type') type: string,
+  ) {
+    if (!this.camunda8Service.isValidType(type)) {
+      throw new BadRequestException('Type required or not found!');
+    }
+    return this.camunda8Service.searchOperate(body, type);
+  }
+
+  @Get('operate/:type/:key')
+  async operateProcessDefinitionGetByKey(
+    @Param('key') key: string,
+    @Param('type') type: string,
+  ) {
+    if (!this.camunda8Service.isValidType(type)) {
+      throw new BadRequestException('Type required or not found!');
+    }
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    return this.camunda8Service.searchOperateByKey(key, type);
+  }
+
+  @Get('operate/process-definition/:key/xml')
+  async operateProcessDefinitionGetByKeyAsXml(@Param('key') key: string) {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    return this.camunda8Service.searchProcessDefinitonByKeyAsXml(key);
   }
 }

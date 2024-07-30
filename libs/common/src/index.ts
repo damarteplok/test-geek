@@ -7,3 +7,4 @@ export * from './minio';
 export * from './interceptors';
 export * from './dto';
 export * from './decorator';
+export * from './interfaces';

@@ -2,6 +2,17 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ZeebeGrpcClient } from '@camunda8/sdk/dist/zeebe';
 import { ConfigService } from '@nestjs/config';
 import { Camunda8 } from '@camunda8/sdk';
+import { SearchProcessDefinitionBody } from '../interfaces';
+import {
+  OPERATE_PROCESS_DEFINITION_URL,
+  OPERATE_DECISION_DEFINITION_URL,
+  OPERATE_DECISION_INSTANCE_URL,
+  OPERATE_DECISION_REQUIREMENT_URL,
+  OPERATE_FLOWNODE_INSTANCE_URL,
+  OPERATE_INCIDENT_URL,
+  OPERATE_PROCESS_INSTANCES_URL,
+  OPERATE_VARIABLES_URL,
+} from '../constants';
 
 @Injectable()
 export class Camunda8Service {
@@ -30,12 +41,8 @@ export class Camunda8Service {
       ZEEBE_GRPC_ADDRESS: configService.get<string>('ZEEBE_GRPC_ADDRESS'),
       ZEEBE_REST_ADDRESS: configService.get<string>('ZEEBE_REST_ADDRESS'),
       ZEEBE_CLIENT_ID: configService.get<string>('ZEEBE_CLIENT_ID'),
-      ZEEBE_CLIENT_SECRET: configService.get<string>(
-        'ZEEBE_CLIENT_SECRET',
-      ),
-      CAMUNDA_AUTH_STRATEGY: configService.get<string>(
-        'CAMUNDA_AUTH_STRATEGY',
-      ),
+      ZEEBE_CLIENT_SECRET: configService.get<string>('ZEEBE_CLIENT_SECRET'),
+      CAMUNDA_AUTH_STRATEGY: configService.get<string>('CAMUNDA_AUTH_STRATEGY'),
       CAMUNDA_OAUTH_URL: configService.get<string>('CAMUNDA_OAUTH_URL'),
       CAMUNDA_TASKLIST_BASE_URL: configService.get<string>(
         'CAMUNDA_TASKLIST_BASE_URL',
@@ -110,13 +117,16 @@ export class Camunda8Service {
     }
   }
 
-  async searchProcessDefinition(): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}/v1/process-definitions/search`;
+  async searchOperate(
+    body: Partial<SearchProcessDefinitionBody>,
+    type: string,
+  ): Promise<any> {
+    const url = `${this.operateUrl(type)}/search`;
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: this.configHeader,
-        body: JSON.stringify({}),
+        body: JSON.stringify(body),
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -126,5 +136,88 @@ export class Camunda8Service {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
+  }
+
+  async searchOperateByKey(key: string, type: string): Promise<any> {
+    const url = `${this.operateUrl(type)}/${key}`;
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.configHeader,
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async searchProcessDefinitonByKeyAsXml(key: string): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_DEFINITION_URL}/${key}/xml`;
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/xml',
+          Accept: '*/*',
+          Authorization: `Bearer ${this.authToken}`,
+        },
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.text();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  private operateUrl(type: string): string {
+    switch (type) {
+      case 'process-definition':
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_DEFINITION_URL}`;
+
+      case 'decision-definition':
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_DECISION_DEFINITION_URL}`;
+
+      case 'decision-instance':
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_DECISION_INSTANCE_URL}`;
+
+      case 'flownode-instance':
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_FLOWNODE_INSTANCE_URL}`;
+
+      case 'variables':
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_VARIABLES_URL}`;
+
+      case 'process-instance':
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_INSTANCES_URL}`;
+
+      case 'drd':
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_DECISION_REQUIREMENT_URL}`;
+
+      case 'incidents':
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_INCIDENT_URL}`;
+
+      default:
+        return `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_DEFINITION_URL}`;
+    }
+  }
+
+  isValidType(type: string): boolean {
+    const arrTypes = [
+      'process-definition',
+      'decision-definition',
+      'decision-instance',
+      'flownode-instance',
+      'variables',
+      'process-instance',
+      'drd',
+      'incidents',
+    ];
+    return arrTypes.includes(type);
   }
 }

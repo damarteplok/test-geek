@@ -17,9 +17,9 @@ import { plainToClass } from 'class-transformer';
 import { UpdateBarangDiskonDto } from './dtos/update-barangdiskon.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('barangdiskon')
 @Serialize(BarangDiskonDto)
-@UseGuards(JwtAuthGuard)
 @ApiTags('barangdiskon')
 export class BarangDiskonController {
   constructor(private readonly barangdiskonService: BarangDiskonService) {}

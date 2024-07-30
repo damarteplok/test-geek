@@ -1,1 +1,9 @@
 export const SUCCESS = 'success';
+export const OPERATE_PROCESS_DEFINITION_URL = '/v1/process-definitions';
+export const OPERATE_DECISION_DEFINITION_URL = '/v1/decision-definitions';
+export const OPERATE_DECISION_INSTANCE_URL = '/v1/decision-instances';
+export const OPERATE_FLOWNODE_INSTANCE_URL = '/v1/flownode-instances';
+export const OPERATE_VARIABLES_URL = '/v1/variables';
+export const OPERATE_PROCESS_INSTANCES_URL = '/v1/process-instances';
+export const OPERATE_DECISION_REQUIREMENT_URL = '/v1/drd';
+export const OPERATE_INCIDENT_URL = '/v1/incidents';
