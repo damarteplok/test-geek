@@ -15,7 +15,6 @@ import { MinioService } from '../minio/minio.service';
 import { SUCCESS, USERS_BUCKET } from '../constants';
 import { Camunda8Service } from './camunda8.service';
 import { SuccessResponseDto } from '../dto';
-import { STATUS_CODES } from 'http';
 
 @Controller('camunda')
 export class Camunda8Controller {
@@ -51,7 +50,6 @@ export class Camunda8Controller {
         key,
       });
       const res = await this.camunda8Service.deployBpmn(key, file.buffer);
-      this.bpmnParserService.generateCrud(body.modelName);
       return { message: 'success', statusCode: 200, data: res };
     } catch (error) {
       throw new InternalServerErrorException(error);
@@ -84,14 +82,9 @@ export class Camunda8Controller {
     }
   }
 
-  @Post('test-login')
+  @Post('login')
   async login() {
     return this.camunda8Service.login();
-  }
-
-  @Post('operate/process-definition')
-  async operateProcessDefinitionSearch() {
-    return this.camunda8Service.searchProcessDefinition();
   }
 
   @Post('crud')
@@ -99,5 +92,10 @@ export class Camunda8Controller {
     console.log(body.modelName);
     this.bpmnParserService.generateCrud(body.modelName);
     return { message: SUCCESS, STATUS_CODES: 200 };
+  }
+
+  @Post('operate/process-definition')
+  async operateProcessDefinitionSearch() {
+    return this.camunda8Service.searchProcessDefinition();
   }
 }

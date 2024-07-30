@@ -37,6 +37,11 @@ import * as Joi from 'joi';
     MinioService,
   ],
   controllers: [Camunda8Controller],
-  exports: [Camunda8Service, MinioService, Camunda8Service, BpmnParserService],
+  exports: [
+    Camunda8Service,
+    MinioService,
+    BpmnParserService,
+    CodeGeneratorService,
+  ],
 })
 export class Camunda8Module {}

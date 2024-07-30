@@ -1,4 +1,5 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
+import { DateTime } from 'luxon';
 
 export class UserDto {
   @Expose()
@@ -8,8 +9,14 @@ export class UserDto {
   email: string;
 
   @Expose()
+  @Transform(({ value }) =>
+    DateTime.fromJSDate(value).toFormat('yyyy-MM-dd HH:mm'),
+  )
   created_at: Date;
 
   @Expose()
+  @Transform(({ value }) =>
+    DateTime.fromJSDate(value).toFormat('yyyy-MM-dd HH:mm'),
+  )
   updated_at: Date;
 }

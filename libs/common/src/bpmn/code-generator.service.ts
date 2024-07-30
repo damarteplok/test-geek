@@ -34,16 +34,23 @@ export class CodeGeneratorService {
     const moduleDir = this.generateFolder(moduleName, 'dtos');
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
+import { DateTime } from 'luxon';
 
 export class ${moduleNameFilter}Dto {
   @Expose()
   id: number;
 
   @Expose()
+  @Transform(({ value }) =>
+    DateTime.fromJSDate(value).toFormat('yyyy-MM-dd HH:mm'),
+  )
   created_at: Date;
 
   @Expose()
+  @Transform(({ value }) =>
+    DateTime.fromJSDate(value).toFormat('yyyy-MM-dd HH:mm'),
+  )
   updated_at: Date;
 }
     `;

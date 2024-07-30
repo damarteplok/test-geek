@@ -26,8 +26,6 @@ export class Camunda8Service {
   }
 
   constructor(private readonly configService: ConfigService) {
-    console.log('masuk sini')
-    console.log(configService.get<string>('ZEEBE_GRPC_ADDRESS'))
     this.client = new Camunda8({
       ZEEBE_GRPC_ADDRESS: configService.get<string>('ZEEBE_GRPC_ADDRESS'),
       ZEEBE_REST_ADDRESS: configService.get<string>('ZEEBE_REST_ADDRESS'),
@@ -52,8 +50,7 @@ export class Camunda8Service {
         'CAMUNDA_MODELER_BASE_URL',
       ),
       CAMUNDA_TENANT_ID: configService.get<string>('CAMUNDA_TENANT_ID'),
-      CAMUNDA_SECURE_CONNECTION:
-        configService.get<boolean>('CAMUNDA_SECURE_CONNECTION') ?? false,
+      CAMUNDA_SECURE_CONNECTION: false,
     });
   }
 
