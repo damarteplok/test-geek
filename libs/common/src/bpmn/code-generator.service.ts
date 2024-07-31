@@ -102,10 +102,13 @@ import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class ${moduleNameFilter} extends AbstractOrmEntity<${moduleNameFilter}> {
-  @Column()
+  @Column({ type: 'varchar', nullable: true })
   process_instance_id: string;
 
-  @Column()
+  @Column({ type: 'varchar', nullable: true })
+  process_definition_id: string;
+
+  @Column({ type: 'varchar', nullable: true })
   business_key: string;
 }
 

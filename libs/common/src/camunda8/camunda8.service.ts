@@ -332,6 +332,42 @@ export class Camunda8Service {
     }
   }
 
+  async searchTasklistTasksByKey(key: string): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.configHeader,
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async searchTasklistVariablesByKey(key: string): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_VARIABLE_URL}/${key}`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.configHeader,
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   async searchTasks(body: Partial<SearchTasksBody>): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/search`;
     try {
@@ -379,6 +415,63 @@ export class Camunda8Service {
     try {
       const response = await fetch(url, {
         method: 'POST',
+        headers: this.configHeader,
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async patchTasksAssign(key: string): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/assign`;
+    try {
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: this.configHeader,
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async patchTasksUnassign(key: string): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/unassign`;
+    try {
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: this.configHeader,
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async patchTasksComplete(
+    key: string,
+    body: Partial<VariablesBody>,
+  ): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/complete`;
+    try {
+      const response = await fetch(url, {
+        method: 'PATCH',
         headers: this.configHeader,
         body: JSON.stringify(body),
       });

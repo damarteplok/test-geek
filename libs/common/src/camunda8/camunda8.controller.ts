@@ -13,6 +13,7 @@ import {
   BadRequestException,
   Delete,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { BpmnParserService, BpmnValidator } from '../bpmn';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -35,6 +36,21 @@ export class Camunda8Controller {
     private readonly camunda8Service: Camunda8Service,
   ) {}
 
+  @Post('login')
+  async login() {
+    return this.camunda8Service.login();
+  }
+
+  @Post('crud')
+  async createCrud(
+    @Body() body: { modelName: string },
+  ): Promise<SuccessResponseDto> {
+    this.bpmnParserService.generateCrud(body.modelName);
+    return { message: SUCCESS, statusCode: 200 };
+  }
+
+  // ZEEBE
+
   @Post('deploy-bpmn')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
@@ -48,7 +64,6 @@ export class Camunda8Controller {
       }),
     )
     file: Express.Multer.File,
-    @Body() body: { modelName: string },
   ): Promise<SuccessResponseDto> {
     try {
       const bpmnData = await this.bpmnParserService.parseBpmnFromUpload(
@@ -91,19 +106,6 @@ export class Camunda8Controller {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
-  }
-
-  @Post('login')
-  async login() {
-    return this.camunda8Service.login();
-  }
-
-  @Post('crud')
-  async createCrud(
-    @Body() body: { modelName: string },
-  ): Promise<SuccessResponseDto> {
-    this.bpmnParserService.generateCrud(body.modelName);
-    return { message: SUCCESS, statusCode: 200 };
   }
 
   // URL OPERATE CAMUNDA
@@ -210,6 +212,32 @@ export class Camunda8Controller {
     return { message: SUCCESS, statusCode: 200, data };
   }
 
+  @Get('tasklist/tasks/:key')
+  async tasklistGetTaskById(
+    @Param('key') key: string,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+
+    const data = this.camunda8Service.searchTasklistTasksByKey(key);
+
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Get('tasklist/variables/:key')
+  async tasklistGetVariablesById(
+    @Param('key') key: string,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+
+    const data = this.camunda8Service.searchTasklistVariablesByKey(key);
+
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
   @Post('tasklist/search/tasks')
   async tasklistTasksSearch(
     @Body() body: SearchTasksDto,
@@ -239,6 +267,40 @@ export class Camunda8Controller {
       throw new BadRequestException('Key required');
     }
     const data = this.camunda8Service.saveTasksVariables(key, body);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Patch('tasklist/tasks/:key/assign')
+  async tasklistTasksAssign(
+    @Param('key') key: string,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data = this.camunda8Service.patchTasksAssign(key);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Patch('tasklist/tasks/:key/unassign')
+  async tasklistTasksUnassign(
+    @Param('key') key: string,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data = this.camunda8Service.patchTasksUnassign(key);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Patch('tasklist/tasks/:key/complete')
+  async tasklistTasksComplete(
+    @Param('key') key: string,
+    @Body() body: VariablesDto,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data = this.camunda8Service.patchTasksComplete(key, body);
     return { message: SUCCESS, statusCode: 200, data };
   }
 }
