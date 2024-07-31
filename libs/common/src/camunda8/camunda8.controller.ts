@@ -11,13 +11,21 @@ import {
   Get,
   Param,
   BadRequestException,
+  Delete,
+  Query,
 } from '@nestjs/common';
 import { BpmnParserService, BpmnValidator } from '../bpmn';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MinioService } from '../minio/minio.service';
 import { SUCCESS, USERS_BUCKET } from '../constants';
 import { Camunda8Service } from './camunda8.service';
-import { SearchProcessDefinitionDto, SuccessResponseDto } from '../dto';
+import {
+  SearchProcessDefinitionDto,
+  SearchTasksDto,
+  SuccessResponseDto,
+  TaskVariablesDto,
+  VariablesDto,
+} from '../dto';
 
 @Controller('camunda')
 export class Camunda8Controller {
@@ -91,41 +99,146 @@ export class Camunda8Controller {
   }
 
   @Post('crud')
-  async createCrud(@Body() body: { modelName: string }) {
+  async createCrud(
+    @Body() body: { modelName: string },
+  ): Promise<SuccessResponseDto> {
     this.bpmnParserService.generateCrud(body.modelName);
-    return { message: SUCCESS, STATUS_CODES: 200 };
+    return { message: SUCCESS, statusCode: 200 };
   }
 
+  // URL OPERATE CAMUNDA
+
   @Post('operate/search/:type')
-  async operateProcessDefinitionSearch(
+  async operateSearch(
     @Body() body: SearchProcessDefinitionDto,
     @Param('type') type: string,
-  ) {
+  ): Promise<SuccessResponseDto> {
     if (!this.camunda8Service.isValidType(type)) {
       throw new BadRequestException('Type required or not found!');
     }
-    return this.camunda8Service.searchOperate(body, type);
+    const data = this.camunda8Service.searchOperate(body, type);
+    return { message: SUCCESS, statusCode: 200, data };
   }
 
   @Get('operate/:type/:key')
-  async operateProcessDefinitionGetByKey(
+  async operateGetByKey(
     @Param('key') key: string,
     @Param('type') type: string,
-  ) {
+  ): Promise<SuccessResponseDto> {
     if (!this.camunda8Service.isValidType(type)) {
       throw new BadRequestException('Type required or not found!');
     }
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    return this.camunda8Service.searchOperateByKey(key, type);
+    const data = this.camunda8Service.searchOperateByKey(key, type);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Get('operate/process-instance/:key/sequence-flows')
+  async operateGetSequenceFlowProcessInstanceByKey(
+    @Param('key') key: string,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data =
+      this.camunda8Service.searchProcessInstanceSequenceFlowByKey(key);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Get('operate/process-instance/:key/statistics')
+  async operateGetFlowNodeProcessInstanceByKey(
+    @Param('key') key: string,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data = this.camunda8Service.searchProcessInstanceFlowNodeByKey(key);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Delete('operate/:type/:key')
+  async operateDeleteByKey(
+    @Param('key') key: string,
+    @Param('type') type: string,
+  ): Promise<any> {
+    if (!this.camunda8Service.isValidType(type)) {
+      throw new BadRequestException('Type required or not found!');
+    }
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data = this.camunda8Service.deleteOperateByKey(key, type);
+    return { message: SUCCESS, statusCode: 200, data };
   }
 
   @Get('operate/process-definition/:key/xml')
-  async operateProcessDefinitionGetByKeyAsXml(@Param('key') key: string) {
+  async operateProcessDefinitionGetByKeyAsXml(
+    @Param('key') key: string,
+  ): Promise<any> {
     if (!key) {
       throw new BadRequestException('Key required');
     }
     return this.camunda8Service.searchProcessDefinitonByKeyAsXml(key);
+  }
+
+  @Get('operate/drd/:key/xml')
+  async operateDecisionGetByKeyAsXml(@Param('key') key: string): Promise<any> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    return this.camunda8Service.searchProcessDecisionByKeyAsXml(key);
+  }
+
+  // URL TASKLIST CAMUNDA
+
+  @Get('tasklist/forms/:key')
+  async tasklistFormSearch(
+    @Param('key') key: string,
+    @Query('processDefinitionKey') processDefinitionKey?: string,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+
+    const data = this.camunda8Service.searchTasklistFormsByKey(
+      key,
+      processDefinitionKey,
+    );
+
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Post('tasklist/search/tasks')
+  async tasklistTasksSearch(
+    @Body() body: SearchTasksDto,
+  ): Promise<SuccessResponseDto> {
+    const data = this.camunda8Service.searchTasks(body);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Post('tasklist/search/:key/variables')
+  async tasklistTasksVariablesSearch(
+    @Param('key') key: string,
+    @Body() body: TaskVariablesDto,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data = this.camunda8Service.searchTasksVariables(key, body);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Post('tasklist/save/:key/variables')
+  async tasklistTasksVariablesSave(
+    @Param('key') key: string,
+    @Body() body: VariablesDto,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data = this.camunda8Service.saveTasksVariables(key, body);
+    return { message: SUCCESS, statusCode: 200, data };
   }
 }

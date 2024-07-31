@@ -2,7 +2,12 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ZeebeGrpcClient } from '@camunda8/sdk/dist/zeebe';
 import { ConfigService } from '@nestjs/config';
 import { Camunda8 } from '@camunda8/sdk';
-import { SearchProcessDefinitionBody } from '../interfaces';
+import {
+  SearchProcessDefinitionBody,
+  SearchTasksBody,
+  TaskVariablesBody,
+  VariablesBody,
+} from '../interfaces';
 import {
   OPERATE_PROCESS_DEFINITION_URL,
   OPERATE_DECISION_DEFINITION_URL,
@@ -12,6 +17,9 @@ import {
   OPERATE_INCIDENT_URL,
   OPERATE_PROCESS_INSTANCES_URL,
   OPERATE_VARIABLES_URL,
+  TASKLIST_FORM_URL,
+  TASKLIST_TASK_URL,
+  TASKLIST_VARIABLE_URL,
 } from '../constants';
 
 @Injectable()
@@ -117,6 +125,8 @@ export class Camunda8Service {
     }
   }
 
+  // SERVICE OPERATE
+
   async searchOperate(
     body: Partial<SearchProcessDefinitionBody>,
     type: string,
@@ -155,8 +165,80 @@ export class Camunda8Service {
     }
   }
 
+  async searchProcessInstanceFlowNodeByKey(key: string): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_INSTANCES_URL}/${key}/statistics`;
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.configHeader,
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async searchProcessInstanceSequenceFlowByKey(key: string): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_INSTANCES_URL}/${key}/sequence-flows`;
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.configHeader,
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async deleteOperateByKey(key: string, type: string): Promise<any> {
+    const url = `${this.operateUrl(type)}/${key}`;
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: this.configHeader,
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   async searchProcessDefinitonByKeyAsXml(key: string): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_DEFINITION_URL}/${key}/xml`;
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/xml',
+          Accept: '*/*',
+          Authorization: `Bearer ${this.authToken}`,
+        },
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.text();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async searchProcessDecisionByKeyAsXml(key: string): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_DECISION_REQUIREMENT_URL}/${key}/xml`;
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -219,5 +301,94 @@ export class Camunda8Service {
       'incidents',
     ];
     return arrTypes.includes(type);
+  }
+
+  // SERVICE TASKLIST
+
+  async searchTasklistFormsByKey(
+    key: string,
+    processDefinitionKey?: string,
+  ): Promise<any> {
+    let url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_FORM_URL}/${key}`;
+
+    if (processDefinitionKey) {
+      const urlObj = new URL(url);
+      urlObj.searchParams.append('processDefinitionKey', processDefinitionKey);
+      url = urlObj.toString();
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.configHeader,
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async searchTasks(body: Partial<SearchTasksBody>): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/search`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.configHeader,
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async searchTasksVariables(
+    key: string,
+    body: Partial<TaskVariablesBody>,
+  ): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/variables/search`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.configHeader,
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async saveTasksVariables(
+    key: string,
+    body: Partial<VariablesBody>,
+  ): Promise<any> {
+    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/variables`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.configHeader,
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 }

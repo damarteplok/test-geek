@@ -7,3 +7,6 @@ export const OPERATE_VARIABLES_URL = '/v1/variables';
 export const OPERATE_PROCESS_INSTANCES_URL = '/v1/process-instances';
 export const OPERATE_DECISION_REQUIREMENT_URL = '/v1/drd';
 export const OPERATE_INCIDENT_URL = '/v1/incidents';
+export const TASKLIST_FORM_URL = '/v1/forms';
+export const TASKLIST_TASK_URL = '/v1/tasks';
+export const TASKLIST_VARIABLE_URL = '/v1/variables';
