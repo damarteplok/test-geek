@@ -1,3 +1,5 @@
+import { JSONDoc } from '@camunda8/sdk/dist/zeebe/lib/interfaces-1.0';
+
 export interface Filter {
   key: number;
   name: string;
@@ -68,4 +70,9 @@ export interface DraftVariables {
 
 export interface VariablesBody {
   variables: DraftVariables[];
+}
+
+export interface CreateProcessInstanceBody {
+  bpmnProcessId: string;
+  variables?: JSONDoc;
 }

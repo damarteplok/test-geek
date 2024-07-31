@@ -3,6 +3,7 @@ import { ZeebeGrpcClient } from '@camunda8/sdk/dist/zeebe';
 import { ConfigService } from '@nestjs/config';
 import { Camunda8 } from '@camunda8/sdk';
 import {
+  CreateProcessInstanceBody,
   SearchProcessDefinitionBody,
   SearchTasksBody,
   TaskVariablesBody,
@@ -71,6 +72,7 @@ export class Camunda8Service {
 
   async deployBpmn(key: string, file: Buffer): Promise<any> {
     const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
+
     try {
       const deploy = await zeebe.deployResource({
         name: key,
@@ -83,6 +85,22 @@ export class Camunda8Service {
           'Deployment failed: No deployments found in the response',
         );
       }
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async createProcessInstance(
+    body: Partial<CreateProcessInstanceBody>,
+  ): Promise<any> {
+    const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
+
+    try {
+      const result = await zeebe.createProcessInstanceWithResult({
+        bpmnProcessId: body.bpmnProcessId,
+        variables: body.variables,
+      });
+      return result;
     } catch (error) {
       throw new InternalServerErrorException(error);
     }

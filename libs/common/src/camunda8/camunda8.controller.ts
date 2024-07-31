@@ -21,6 +21,7 @@ import { MinioService } from '../minio/minio.service';
 import { SUCCESS, USERS_BUCKET } from '../constants';
 import { Camunda8Service } from './camunda8.service';
 import {
+  CreateProcessInstanceDto,
   SearchProcessDefinitionDto,
   SearchTasksDto,
   SuccessResponseDto,
@@ -108,6 +109,14 @@ export class Camunda8Controller {
     }
   }
 
+  @Post('create-process-instance')
+  async createProcessInstance(
+    @Body() body: CreateProcessInstanceDto,
+  ): Promise<SuccessResponseDto> {
+    const data = await this.camunda8Service.createProcessInstance(body);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
   // URL OPERATE CAMUNDA
 
   @Post('operate/search/:type')
@@ -118,7 +127,7 @@ export class Camunda8Controller {
     if (!this.camunda8Service.isValidType(type)) {
       throw new BadRequestException('Type required or not found!');
     }
-    const data = this.camunda8Service.searchOperate(body, type);
+    const data = await this.camunda8Service.searchOperate(body, type);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -133,7 +142,7 @@ export class Camunda8Controller {
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    const data = this.camunda8Service.searchOperateByKey(key, type);
+    const data = await this.camunda8Service.searchOperateByKey(key, type);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -145,7 +154,7 @@ export class Camunda8Controller {
       throw new BadRequestException('Key required');
     }
     const data =
-      this.camunda8Service.searchProcessInstanceSequenceFlowByKey(key);
+      await this.camunda8Service.searchProcessInstanceSequenceFlowByKey(key);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -156,7 +165,8 @@ export class Camunda8Controller {
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    const data = this.camunda8Service.searchProcessInstanceFlowNodeByKey(key);
+    const data =
+      await this.camunda8Service.searchProcessInstanceFlowNodeByKey(key);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -171,7 +181,7 @@ export class Camunda8Controller {
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    const data = this.camunda8Service.deleteOperateByKey(key, type);
+    const data = await this.camunda8Service.deleteOperateByKey(key, type);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -204,7 +214,7 @@ export class Camunda8Controller {
       throw new BadRequestException('Key required');
     }
 
-    const data = this.camunda8Service.searchTasklistFormsByKey(
+    const data = await this.camunda8Service.searchTasklistFormsByKey(
       key,
       processDefinitionKey,
     );
@@ -220,7 +230,7 @@ export class Camunda8Controller {
       throw new BadRequestException('Key required');
     }
 
-    const data = this.camunda8Service.searchTasklistTasksByKey(key);
+    const data = await this.camunda8Service.searchTasklistTasksByKey(key);
 
     return { message: SUCCESS, statusCode: 200, data };
   }
@@ -233,7 +243,7 @@ export class Camunda8Controller {
       throw new BadRequestException('Key required');
     }
 
-    const data = this.camunda8Service.searchTasklistVariablesByKey(key);
+    const data = await this.camunda8Service.searchTasklistVariablesByKey(key);
 
     return { message: SUCCESS, statusCode: 200, data };
   }
@@ -242,7 +252,7 @@ export class Camunda8Controller {
   async tasklistTasksSearch(
     @Body() body: SearchTasksDto,
   ): Promise<SuccessResponseDto> {
-    const data = this.camunda8Service.searchTasks(body);
+    const data = await this.camunda8Service.searchTasks(body);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -254,7 +264,7 @@ export class Camunda8Controller {
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    const data = this.camunda8Service.searchTasksVariables(key, body);
+    const data = await this.camunda8Service.searchTasksVariables(key, body);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -266,7 +276,7 @@ export class Camunda8Controller {
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    const data = this.camunda8Service.saveTasksVariables(key, body);
+    const data = await this.camunda8Service.saveTasksVariables(key, body);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -277,7 +287,7 @@ export class Camunda8Controller {
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    const data = this.camunda8Service.patchTasksAssign(key);
+    const data = await this.camunda8Service.patchTasksAssign(key);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -288,7 +298,7 @@ export class Camunda8Controller {
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    const data = this.camunda8Service.patchTasksUnassign(key);
+    const data = await this.camunda8Service.patchTasksUnassign(key);
     return { message: SUCCESS, statusCode: 200, data };
   }
 
@@ -300,7 +310,7 @@ export class Camunda8Controller {
     if (!key) {
       throw new BadRequestException('Key required');
     }
-    const data = this.camunda8Service.patchTasksComplete(key, body);
+    const data = await this.camunda8Service.patchTasksComplete(key, body);
     return { message: SUCCESS, statusCode: 200, data };
   }
 }
