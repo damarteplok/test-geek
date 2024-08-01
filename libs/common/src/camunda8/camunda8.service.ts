@@ -96,7 +96,7 @@ export class Camunda8Service {
     const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
 
     try {
-      const result = await zeebe.createProcessInstanceWithResult({
+      const result = await zeebe.createProcessInstance({
         bpmnProcessId: body.bpmnProcessId,
         variables: body.variables,
       });
