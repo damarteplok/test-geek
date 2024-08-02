@@ -94,12 +94,23 @@ export class Camunda8Service {
     body: Partial<CreateProcessInstanceBody>,
   ): Promise<any> {
     const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
-
+    
     try {
       const result = await zeebe.createProcessInstance({
         bpmnProcessId: body.bpmnProcessId,
         variables: body.variables,
       });
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async cancelProcessInstance(key: string): Promise<any> {
+    const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
+
+    try {
+      const result = await zeebe.cancelProcessInstance(key);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error);

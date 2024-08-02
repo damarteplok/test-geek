@@ -11,26 +11,44 @@ async function bootstrap() {
     snapshot: true,
   });
   const configService = app.get(ConfigService);
-
-  app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useLogger(app.get(Logger));
-
-  const config = new DocumentBuilder()
-    .setTitle('Qalisys example')
-    .setDescription('The Qalisys API description')
-    .setVersion('1.0')
-    .addTag('Qalisys')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
 
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
   });
 
-  app.enableCors();
+  if (configService.get('NODE_ENV') === 'dev') {
+    app.enableCors({
+      origin: true,
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      credentials: true,
+    });
+
+    const configSwagger = new DocumentBuilder()
+      .setTitle(configService.get('APP_NAME'))
+      .setDescription(configService.get('APP_DESCRIPTIONS'))
+      .setVersion(configService.get('APP_SAME_SITE'))
+      .build();
+    const document = SwaggerModule.createDocument(app, configSwagger);
+    SwaggerModule.setup('api-docs', app, document);
+  } else {
+    const whitelist = [configService.get('APP_FRONTEND_URL')];
+    app.enableCors({
+      origin: function (origin, callback) {
+        if (!origin || whitelist.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+      credentials: true,
+    });
+  }
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.use(cookieParser());
+
   await app.listen(configService.get('HTTP_PORT') || 3000);
 }
 bootstrap();

@@ -109,11 +109,22 @@ export class Camunda8Controller {
     }
   }
 
-  @Post('create-process-instance')
+  @Post('process-instance/create')
   async createProcessInstance(
     @Body() body: CreateProcessInstanceDto,
   ): Promise<SuccessResponseDto> {
     const data = await this.camunda8Service.createProcessInstance(body);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  @Patch('process-instance/:key/cancel')
+  async cancelProcessInstance(
+    @Param('key') key: string,
+  ): Promise<SuccessResponseDto> {
+    if (!key) {
+      throw new BadRequestException('Key required');
+    }
+    const data = await this.camunda8Service.cancelProcessInstance(key);
     return { message: SUCCESS, statusCode: 200, data };
   }
 

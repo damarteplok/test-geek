@@ -61,7 +61,6 @@ export class ${moduleNameFilter}Dto {
     );
 
     const moduleContentCreate = `
-import { ApiProperty } from '@nestjs/swagger';
 
 export class Create${moduleNameFilter}Dto {
   
@@ -77,7 +76,6 @@ export class Create${moduleNameFilter}Dto {
     );
 
     const moduleContentUpdate = `
-import { ApiProperty } from '@nestjs/swagger';
 
 export class Update${moduleNameFilter}Dto {
   
@@ -91,6 +89,32 @@ export class Update${moduleNameFilter}Dto {
       ),
       moduleContentUpdate.trim(),
     );
+
+    const moduleContentFilter = `
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { CommonSearchFieldDto } from '@app/common';
+import { FindOptionsOrder } from 'typeorm';
+import { ${moduleNameFilter}Entity } from '../models/${moduleNameFilter.toLowerCase()}.entity';
+
+export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldDto) {
+  @ApiPropertyOptional({
+    type: Object,
+    description:
+      'Order by fields, e.g., { "name": "ASC", "created_at": "DESC" }',
+  })
+  @IsOptional()
+  order: FindOptionsOrder<${moduleNameFilter}Entity>;
+}
+    `;
+
+    fs.writeFileSync(
+      path.resolve(
+        moduleDir,
+        `filter-${moduleNameFilter.toLowerCase()}.dto.ts`,
+      ),
+      moduleContentFilter.trim(),
+    );
   }
 
   private generateModels(moduleName: string): void {
@@ -100,7 +124,9 @@ export class Update${moduleNameFilter}Dto {
 import { AbstractOrmEntity } from '@app/common';
 import { Column, Entity } from 'typeorm';
 
-@Entity()
+@Entity({
+  name: '${moduleNameFilter.toLocaleLowerCase()}',
+})
 export class ${moduleNameFilter} extends AbstractOrmEntity<${moduleNameFilter}> {
   @Column({ type: 'varchar', nullable: true })
   process_instance_id: string;
@@ -251,6 +277,104 @@ export class ${moduleNameFilter}Controller {
   }
 }
 
+
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { plainToClass } from 'class-transformer';
+import { ${moduleNameFilter}Dto } from './dto/${moduleNameFilter.toLowerCase()}dto';
+import { Serialize, FindDto, JwtAuthGuard } from '@app/common';
+import { ${moduleNameFilter}Service } from './${moduleNameFilter.toLowerCase()}service';
+import { Create${moduleNameFilter}Dto } from './dto/create-${moduleNameFilter.toLowerCase()}dto';
+import { Filter${moduleNameFilter}Dto } from './dto/filter-${moduleNameFilter.toLowerCase()}dto';
+import { Update${moduleNameFilter}Dto } from './dto/update-${moduleNameFilter.toLowerCase()}dto';
+import { ${moduleNameFilter}Entity } from './models/${moduleNameFilter.toLowerCase()}entity';
+
+@UseGuards(JwtAuthGuard)
+@Controller('${moduleNameFilter.toLowerCase()}')
+@Serialize(${moduleNameFilter}Dto)
+@ApiTags('${moduleNameFilter.toLowerCase()}')
+@ApiBearerAuth()
+export class ${moduleNameFilter}Controller {
+  constructor(private readonly ${moduleNameFilter.toLowerCase()}Service: ${moduleNameFilter}Service) {}
+
+  @Post()
+  async create(@Body() create${moduleNameFilter}Dto: Create${moduleNameFilter}Dto) {
+    const entity = plainToClass(${moduleNameFilter}Entity, create${moduleNameFilter}Dto);
+    return this.${moduleNameFilter.toLowerCase()}Service.create(entity);
+  }
+
+  @Get()
+  async findAllPagination(@Query() filter${moduleNameFilter}Dto: Filter${moduleNameFilter}Dto) {
+    const where = plainToClass(${moduleNameFilter}Entity, { deleted_at: null });
+    const nameTable = '${moduleNameFilter.toLowerCase()}';
+    const searchColumns: (keyof ${moduleNameFilter}Entity)[] = [
+      
+    ];
+    return this.${moduleNameFilter.toLowerCase()}Service.findByKeywordsWithPagination(
+      filter${moduleNameFilter}Dto.page,
+      filter${moduleNameFilter}Dto.limit,
+      nameTable,
+      filter${moduleNameFilter}Dto.keywords,
+      searchColumns,
+      where,
+      [],
+      filter${moduleNameFilter}Dto.order,
+    );
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
+    return this.${moduleNameFilter.toLowerCase()}Service.findOne(findDto);
+  }
+
+  @Get('all')
+  async findAll() {
+    return this.${moduleNameFilter.toLowerCase()}Service.find({ deleted_at: null });
+  }
+
+  // searching with post biasa dipake utk advance searching
+  @Post('search')
+  async findEntityAllPagination(
+    @Body() filter${moduleNameFilter}Dto: Filter${moduleNameFilter}Dto,
+  ) {
+    const { resource, description } = filter${moduleNameFilter}Dto;
+    return this.${moduleNameFilter.toLowerCase()}Service.findByWithPagination(
+      filter${moduleNameFilter}Dto.page,
+      filter${moduleNameFilter}Dto.limit,
+      { resource, description, deleted_at: null },
+      [],
+      filter${moduleNameFilter}Dto.order,
+    );
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() update${moduleNameFilter}Dto: Update${moduleNameFilter}Dto,
+  ) {
+    const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
+    return this.${moduleNameFilter.toLowerCase()}Service.update(findDto, update${moduleNameFilter}Dto, []);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
+    return this.${moduleNameFilter.toLowerCase()}Service.remove(findDto);
+  }
+}
+
+
     `;
     fs.writeFileSync(
       path.resolve(
@@ -267,35 +391,16 @@ export class ${moduleNameFilter}Controller {
     const moduleContent = `
 import { Injectable } from '@nestjs/common';
 import { ${moduleNameFilter}Repository } from './${moduleNameFilter.toLowerCase()}.repository';
-import { FindDto } from '@app/common';
-import { Create${moduleNameFilter}Dto } from './dtos/create-${moduleNameFilter.toLowerCase()}.dto';
-import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLowerCase()}.entity';
+import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLocaleLowerCase()}.entity';
+import { AbstractOrmService } from '@app/common';
 
 @Injectable()
-export class ${moduleNameFilter}Service {
-  constructor(private readonly ${moduleNameFilter.toLowerCase()}Repository: ${moduleNameFilter}Repository) {}
+export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameFilter}> {
+  protected readonly repository: ${moduleNameFilter}Repository;
 
-  async create(create${moduleNameFilter}Dto: Create${moduleNameFilter}Dto) {
-    const ${moduleNameFilter.toLowerCase()} = new ${moduleNameFilter}({
-      ...create${moduleNameFilter}Dto,
-    });
-    return this.${moduleNameFilter.toLowerCase()}Repository.create(${moduleNameFilter.toLowerCase()});
-  }
-
-  async find(attrs: Partial<${moduleNameFilter}>) {
-    return this.${moduleNameFilter.toLowerCase()}Repository.find({ ...attrs });
-  }
-
-  async findOne(attr: FindDto) {
-    return this.${moduleNameFilter.toLowerCase()}Repository.findOne({ ...attr });
-  }
-
-  async update(attr: FindDto, attrs: Partial<${moduleNameFilter}>) {
-    return this.${moduleNameFilter.toLowerCase()}Repository.findOneAndUpdate({ ...attr }, attrs);
-  }
-
-  async remove(attr: FindDto) {
-    return this.${moduleNameFilter.toLowerCase()}Repository.findOneAndDelete({ ...attr });
+  constructor(${moduleNameFilter.toLocaleLowerCase()}Repository: ${moduleNameFilter}Repository) {
+    super();
+    this.repository = ${moduleNameFilter.toLocaleLowerCase()}Repository;
   }
 }
 
@@ -308,8 +413,8 @@ export class ${moduleNameFilter}Service {
 
   generateCrud(moduleName: string): void {
     this.generateFolder(moduleName);
-    this.generateDtos(moduleName);
     this.generateModels(moduleName);
+    this.generateDtos(moduleName);
     this.generateRepository(moduleName);
     this.generateService(moduleName);
     this.generateController(moduleName);

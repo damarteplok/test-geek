@@ -1,7 +1,12 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { Camunda8Module, LoggerModule } from '@app/common';
+import {
+  Camunda8Module,
+  LoggerModule,
+  PermissionModule,
+  RoleModule,
+} from '@app/common';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
@@ -17,19 +22,21 @@ import { NilaiModule } from './nilai/nilai.module';
   imports: [
     LoggerModule,
     UsersModule,
-    NamaNimModule,
-    BarangDiskonModule,
-    NilaiModule,
+    // NamaNimModule,
+    // BarangDiskonModule,
+    // NilaiModule,
+    // ChooseDinnerModule,
+    PermissionModule,
+    RoleModule,
     AuthModule,
     Camunda8Module,
-    ChooseDinnerModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
     ThrottlerModule.forRoot([
       {
-        ttl: 60,
-        limit: 10,
+        ttl: +process.env.APP_THROTTLER_TTL,
+        limit: +process.env.APP_THROTTLER_LIMIT,
       },
     ]),
     DevtoolsModule.register({
