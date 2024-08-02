@@ -12,20 +12,12 @@ import { AuthModule } from './auth/auth.module';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
-import { ChooseDinnerModule } from './choosedinner/choosedinner.module';
 import { ConfigModule } from '@nestjs/config';
-import { NamaNimModule } from './namanim/namanim.module';
-import { BarangDiskonModule } from './barangdiskon/barangdiskon.module';
-import { NilaiModule } from './nilai/nilai.module';
 
 @Module({
   imports: [
     LoggerModule,
     UsersModule,
-    // NamaNimModule,
-    // BarangDiskonModule,
-    // NilaiModule,
-    // ChooseDinnerModule,
     PermissionModule,
     RoleModule,
     AuthModule,

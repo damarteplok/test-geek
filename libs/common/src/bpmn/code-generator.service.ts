@@ -92,10 +92,10 @@ export class Update${moduleNameFilter}Dto {
 
     const moduleContentFilter = `
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional } from 'class-validator';
 import { CommonSearchFieldDto } from '@app/common';
 import { FindOptionsOrder } from 'typeorm';
-import { ${moduleNameFilter}Entity } from '../models/${moduleNameFilter.toLowerCase()}.entity';
+import { ${moduleNameFilter} } from '../models/${moduleNameFilter.toLowerCase()}.entity';
 
 export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldDto) {
   @ApiPropertyOptional({
@@ -104,7 +104,7 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
       'Order by fields, e.g., { "name": "ASC", "created_at": "DESC" }',
   })
   @IsOptional()
-  order: FindOptionsOrder<${moduleNameFilter}Entity>;
+  order: FindOptionsOrder<${moduleNameFilter}>;
 }
     `;
 
@@ -232,72 +232,18 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
-} from '@nestjs/common';
-import { ${moduleNameFilter}Service } from './${moduleNameFilter.toLowerCase()}.service';
-import { Create${moduleNameFilter}Dto } from './dtos/create-${moduleNameFilter.toLowerCase()}.dto';
-import { FindDto, Serialize } from '@app/common';
-import { ${moduleNameFilter}Dto } from './dtos/${moduleNameFilter.toLowerCase()}.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { plainToClass } from 'class-transformer';
-import { Update${moduleNameFilter}Dto } from './dtos/update-${moduleNameFilter.toLowerCase()}.dto';
-
-@Controller('${moduleNameFilter.toLowerCase()}')
-@Serialize(${moduleNameFilter}Dto)
-@ApiTags('${moduleNameFilter.toLowerCase()}')
-export class ${moduleNameFilter}Controller {
-  constructor(private readonly ${moduleNameFilter.toLowerCase()}Service: ${moduleNameFilter}Service) {}
-
-  @Post()
-  async create(@Body() create${moduleNameFilter}Dto: Create${moduleNameFilter}Dto) {
-    return this.${moduleNameFilter.toLowerCase()}Service.create(create${moduleNameFilter}Dto);
-  }
-
-  @Get()
-  async findAll() {
-    return this.${moduleNameFilter.toLowerCase()}Service.find({ deleted_at: null });
-  }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.${moduleNameFilter.toLowerCase()}Service.findOne(findDto);
-  }
-
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() update${moduleNameFilter}Dto: Update${moduleNameFilter}Dto) {
-    const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.${moduleNameFilter.toLowerCase()}Service.update(findDto, update${moduleNameFilter}Dto);
-  }
-
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.${moduleNameFilter.toLowerCase()}Service.remove(findDto);
-  }
-}
-
-
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
-import { ${moduleNameFilter}Dto } from './dto/${moduleNameFilter.toLowerCase()}dto';
+import { ${moduleNameFilter}Dto } from './dtos/${moduleNameFilter.toLowerCase()}.dto';
 import { Serialize, FindDto, JwtAuthGuard } from '@app/common';
-import { ${moduleNameFilter}Service } from './${moduleNameFilter.toLowerCase()}service';
-import { Create${moduleNameFilter}Dto } from './dto/create-${moduleNameFilter.toLowerCase()}dto';
-import { Filter${moduleNameFilter}Dto } from './dto/filter-${moduleNameFilter.toLowerCase()}dto';
-import { Update${moduleNameFilter}Dto } from './dto/update-${moduleNameFilter.toLowerCase()}dto';
-import { ${moduleNameFilter}Entity } from './models/${moduleNameFilter.toLowerCase()}entity';
+import { ${moduleNameFilter}Service } from './${moduleNameFilter.toLowerCase()}.service';
+import { Create${moduleNameFilter}Dto } from './dtos/create-${moduleNameFilter.toLowerCase()}.dto';
+import { Filter${moduleNameFilter}Dto } from './dtos/filter-${moduleNameFilter.toLowerCase()}.dto';
+import { Update${moduleNameFilter}Dto } from './dtos/update-${moduleNameFilter.toLowerCase()}.dto';
+import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLowerCase()}.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller('${moduleNameFilter.toLowerCase()}')
@@ -309,15 +255,15 @@ export class ${moduleNameFilter}Controller {
 
   @Post()
   async create(@Body() create${moduleNameFilter}Dto: Create${moduleNameFilter}Dto) {
-    const entity = plainToClass(${moduleNameFilter}Entity, create${moduleNameFilter}Dto);
+    const entity = plainToClass(${moduleNameFilter}, create${moduleNameFilter}Dto);
     return this.${moduleNameFilter.toLowerCase()}Service.create(entity);
   }
 
   @Get()
   async findAllPagination(@Query() filter${moduleNameFilter}Dto: Filter${moduleNameFilter}Dto) {
-    const where = plainToClass(${moduleNameFilter}Entity, { deleted_at: null });
+    const where = plainToClass(${moduleNameFilter}, { deleted_at: null });
     const nameTable = '${moduleNameFilter.toLowerCase()}';
-    const searchColumns: (keyof ${moduleNameFilter}Entity)[] = [
+    const searchColumns: (keyof ${moduleNameFilter})[] = [
       
     ];
     return this.${moduleNameFilter.toLowerCase()}Service.findByKeywordsWithPagination(
@@ -343,16 +289,14 @@ export class ${moduleNameFilter}Controller {
     return this.${moduleNameFilter.toLowerCase()}Service.find({ deleted_at: null });
   }
 
-  // searching with post biasa dipake utk advance searching
   @Post('search')
   async findEntityAllPagination(
     @Body() filter${moduleNameFilter}Dto: Filter${moduleNameFilter}Dto,
   ) {
-    const { resource, description } = filter${moduleNameFilter}Dto;
     return this.${moduleNameFilter.toLowerCase()}Service.findByWithPagination(
       filter${moduleNameFilter}Dto.page,
       filter${moduleNameFilter}Dto.limit,
-      { resource, description, deleted_at: null },
+      { deleted_at: null },
       [],
       filter${moduleNameFilter}Dto.order,
     );
