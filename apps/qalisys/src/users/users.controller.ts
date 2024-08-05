@@ -46,7 +46,7 @@ export class UsersController {
       where,
       [],
       filterUserDto.order,
-      ['name', 'address', 'contact'],
+      ['name', 'address', 'contact', 'created_at', 'updated_at'],
     );
     return plainToClass(UserDto, results);
   }

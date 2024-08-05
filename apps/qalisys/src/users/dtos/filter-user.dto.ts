@@ -8,15 +8,34 @@ export class FilterUserDto extends PartialType(CommonSearchFieldDto) {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  @MaxLength(50, {
-    message: 'maxLength-{"ln":50,"count":50}',
+  @MaxLength(256, {
+    message: 'maxLength-{"ln":256,"count":256}',
   })
-  resource: string;
+  name: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  description: string;
+  @MaxLength(256, {
+    message: 'maxLength-{"ln":256,"count":256}',
+  })
+  address: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @MaxLength(256, {
+    message: 'maxLength-{"ln":256,"count":256}',
+  })
+  contact: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @MaxLength(256, {
+    message: 'maxLength-{"ln":256,"count":256}',
+  })
+  status: string;
 
   @ApiPropertyOptional({
     type: Object,
