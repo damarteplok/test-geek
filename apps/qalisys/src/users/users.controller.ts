@@ -7,11 +7,14 @@ import {
   Get,
   InternalServerErrorException,
   MaxFileSizeValidator,
+  NotFoundException,
   Param,
   ParseFilePipe,
   Patch,
   Post,
   Query,
+  Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -28,6 +31,8 @@ import { User } from './models/user.entity';
 import { FilterUserDto } from './dtos/filter-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { USERS_AVATAR } from '@app/common/constants';
+import type { Response } from 'express';
+import { Stream } from 'stream';
 
 @Controller('users')
 @ApiTags('users')
@@ -105,7 +110,7 @@ export class UsersController {
     return this.usersService.remove(findDto);
   }
 
-  @Patch(':id/avatar')
+  @Patch('avatar/:id')
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(JwtAuthGuard)
   @Serialize(UserDto)
@@ -140,5 +145,34 @@ export class UsersController {
     } else {
       throw new InternalServerErrorException('Failed to upload!.');
     }
+  }
+
+  @Get('avatar/:id')
+  @UseGuards(JwtAuthGuard)
+  async getAvatar(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (!id) {
+      throw new BadRequestException('Id required');
+    }
+    const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
+    const user = await this.usersService.findOne(findDto);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    const fileStream = await this.minioService.getFile(
+      USERS_AVATAR,
+      user.avatar,
+    );
+    if (!fileStream) {
+      throw new NotFoundException(`File for User with ID ${id} not found`);
+    }
+    res.set({
+      'Content-Type': 'image/*',
+      'Content-Disposition': `attachment; filename="${user.avatar}"`,
+    });
+
+    return new StreamableFile(fileStream);
   }
 }
