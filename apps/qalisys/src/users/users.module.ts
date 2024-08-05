@@ -1,6 +1,7 @@
 import {
   DatabaseOrmModule,
   LoggerModule,
+  MinioService,
   RoleModule,
 } from '@app/common';
 import { Module } from '@nestjs/common';
@@ -29,7 +30,7 @@ import * as Joi from 'joi';
     RoleModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService, UsersRepository],
+  providers: [UsersService, UsersRepository, MinioService],
   exports: [UsersService],
 })
 export class UsersModule {}

@@ -11,7 +11,6 @@ import { User } from './models/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { GetUserDto } from './dtos/get-user.dto';
 import { AbstractOrmService, FindDto, RoleRepository } from '@app/common';
-import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class UsersService extends AbstractOrmService<User> {
@@ -86,7 +85,6 @@ export class UsersService extends AbstractOrmService<User> {
     if (attrs.roleId !== undefined) {
       const role = await this.roleRepository.findOne({
         id: attrs.roleId,
-        deleted_at: null,
       });
       if (!role) {
         throw new NotFoundException(`Role with ID ${attrs.roleId} not found`);
