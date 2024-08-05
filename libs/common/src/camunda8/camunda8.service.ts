@@ -22,16 +22,14 @@ import {
   TASKLIST_TASK_URL,
   TASKLIST_VARIABLE_URL,
 } from '../constants';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class Camunda8Service {
   private readonly client: Camunda8;
   private authToken: string;
+  private refreshToken: string;
   private configHeader: Record<string, string>;
-
-  public getAuthToken() {
-    return this.authToken;
-  }
 
   public setConfigHeader() {
     this.configHeader = {
@@ -94,7 +92,7 @@ export class Camunda8Service {
     body: Partial<CreateProcessInstanceBody>,
   ): Promise<any> {
     const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
-    
+
     try {
       const result = await zeebe.createProcessInstance({
         bpmnProcessId: body.bpmnProcessId,
@@ -147,10 +145,71 @@ export class Camunda8Service {
 
       const data = await response.json();
       this.authToken = data.access_token;
+      this.refreshToken = data.refresh_token;
       this.setConfigHeader();
+      await this.getAuthToken();
       return { message: this.authToken, statusCode: 200 };
     } catch (error) {
       throw new InternalServerErrorException(error);
+    }
+  }
+
+  async refreshTokenFunc(): Promise<void> {
+    const formData = new URLSearchParams();
+    formData.append(
+      'client_id',
+      this.configService.get<string>('ZEEBE_CLIENT_ID'),
+    );
+    formData.append(
+      'client_secret',
+      this.configService.get<string>('ZEEBE_CLIENT_SECRET'),
+    );
+    formData.append('grant_type', 'refresh_token');
+    formData.append('refresh_token', this.refreshToken);
+
+    try {
+      const response = await fetch(
+        this.configService.get<string>('CAMUNDA_OAUTH_URL'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString(),
+        },
+      );
+
+      if (!response.ok) {
+        throw new InternalServerErrorException(`Error during token refresh`);
+      }
+
+      const data = await response.json();
+      this.authToken = data.access_token;
+      this.refreshToken = data.refresh_token;
+      this.setConfigHeader();
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getAuthToken(): Promise<string> {
+    if (this.isTokenExpired(this.authToken)) {
+      await this.refreshTokenFunc();
+    }
+    return this.authToken;
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const decoded = jwt.decode(token) as { exp: number };
+      if (!decoded || !decoded.exp) {
+        return true;
+      }
+
+      const currentTime = Date.now() / 1000;
+      return decoded.exp < currentTime;
+    } catch (error) {
+      return true;
     }
   }
 
@@ -162,9 +221,10 @@ export class Camunda8Service {
   ): Promise<any> {
     const url = `${this.operateUrl(type)}/search`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'POST',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
       if (!response.ok) {
@@ -180,9 +240,10 @@ export class Camunda8Service {
   async searchOperateByKey(key: string, type: string): Promise<any> {
     const url = `${this.operateUrl(type)}/${key}`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -197,9 +258,10 @@ export class Camunda8Service {
   async searchProcessInstanceFlowNodeByKey(key: string): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_INSTANCES_URL}/${key}/statistics`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -214,9 +276,10 @@ export class Camunda8Service {
   async searchProcessInstanceSequenceFlowByKey(key: string): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${OPERATE_PROCESS_INSTANCES_URL}/${key}/sequence-flows`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -231,9 +294,10 @@ export class Camunda8Service {
   async deleteOperateByKey(key: string, type: string): Promise<any> {
     const url = `${this.operateUrl(type)}/${key}`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'DELETE',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -347,9 +411,10 @@ export class Camunda8Service {
     }
 
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -365,9 +430,10 @@ export class Camunda8Service {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}`;
 
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -383,9 +449,10 @@ export class Camunda8Service {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_VARIABLE_URL}/${key}`;
 
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -400,9 +467,10 @@ export class Camunda8Service {
   async searchTasks(body: Partial<SearchTasksBody>): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/search`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'POST',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
       if (!response.ok) {
@@ -421,9 +489,10 @@ export class Camunda8Service {
   ): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/variables/search`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'POST',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
       if (!response.ok) {
@@ -442,9 +511,10 @@ export class Camunda8Service {
   ): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/variables`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'POST',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
       if (!response.ok) {
@@ -460,9 +530,10 @@ export class Camunda8Service {
   async patchTasksAssign(key: string): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/assign`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'PATCH',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
         body: JSON.stringify({}),
       });
       if (!response.ok) {
@@ -478,9 +549,10 @@ export class Camunda8Service {
   async patchTasksUnassign(key: string): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/unassign`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'PATCH',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
         body: JSON.stringify({}),
       });
       if (!response.ok) {
@@ -499,9 +571,10 @@ export class Camunda8Service {
   ): Promise<any> {
     const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/complete`;
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'PATCH',
-        headers: this.configHeader,
+        headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
       if (!response.ok) {
