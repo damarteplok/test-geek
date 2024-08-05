@@ -23,13 +23,13 @@ import { RoleEntity } from './models/role.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller('roles')
-@Serialize(RoleDto)
 @ApiTags('roles')
 @ApiBearerAuth()
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Post()
+  @Serialize(RoleDto)
   async create(@Body() createRoleDto: CreateRoleDto) {
     const roleEntity = plainToClass(RoleEntity, createRoleDto);
 
@@ -38,12 +38,12 @@ export class RoleController {
 
   @Get()
   async findAllPagination(@Query() filterRoleDto: FilterRoleDto) {
-    const where = plainToClass(RoleEntity, { deleted_at: null });
+    const where = plainToClass(RoleEntity, {});
     const nameTable = 'role';
     const searchColumns: (keyof RoleEntity)[] = ['name', 'description'];
     return this.roleService.findByKeywordsWithPagination(
-      filterRoleDto.page,
-      filterRoleDto.limit,
+      filterRoleDto.page ?? 1,
+      filterRoleDto.limit ?? 10,
       nameTable,
       filterRoleDto.keywords,
       searchColumns,
@@ -54,14 +54,16 @@ export class RoleController {
   }
 
   @Get(':id')
+  @Serialize(RoleDto)
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.roleService.findOne(findDto);
   }
 
   @Get('all')
+  @Serialize(RoleDto)
   async findAll() {
-    return this.roleService.find({ deleted_at: null });
+    return this.roleService.find({});
   }
 
   // searching with post biasa dipake utk advance searching
@@ -71,19 +73,21 @@ export class RoleController {
     return this.roleService.findByWithPagination(
       filterRoleDto.page,
       filterRoleDto.limit,
-      { name, description, deleted_at: null },
+      { name, description },
       [],
       filterRoleDto.order,
     );
   }
 
   @Patch(':id')
+  @Serialize(RoleDto)
   async update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.roleService.update(findDto, updateRoleDto, []);
   }
 
   @Delete(':id')
+  @Serialize(RoleDto)
   async remove(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.roleService.remove(findDto);

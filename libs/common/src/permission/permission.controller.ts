@@ -23,13 +23,13 @@ import { PermissionEntity } from './models/permission.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller('permissions')
-@Serialize(PermissionDto)
 @ApiTags('permissions')
 @ApiBearerAuth()
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
   @Post()
+  @Serialize(PermissionDto)
   async create(@Body() createPermissionDto: CreatePermissionDto) {
     const entity = plainToClass(PermissionEntity, createPermissionDto);
     return this.permissionService.create(entity);
@@ -37,15 +37,15 @@ export class PermissionController {
 
   @Get()
   async findAllPagination(@Query() filterPermissionDto: FilterPermissionDto) {
-    const where = plainToClass(PermissionEntity, { deleted_at: null });
+    const where = plainToClass(PermissionEntity, {});
     const nameTable = 'permission';
     const searchColumns: (keyof PermissionEntity)[] = [
       'resource',
       'description',
     ];
     return this.permissionService.findByKeywordsWithPagination(
-      filterPermissionDto.page,
-      filterPermissionDto.limit,
+      filterPermissionDto.page ?? 1,
+      filterPermissionDto.limit ?? 10,
       nameTable,
       filterPermissionDto.keywords,
       searchColumns,
@@ -56,14 +56,16 @@ export class PermissionController {
   }
 
   @Get(':id')
+  @Serialize(PermissionDto)
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.permissionService.findOne(findDto);
   }
 
   @Get('all')
+  @Serialize(PermissionDto)
   async findAll() {
-    return this.permissionService.find({ deleted_at: null });
+    return this.permissionService.find({});
   }
 
   // searching with post biasa dipake utk advance searching
@@ -75,13 +77,14 @@ export class PermissionController {
     return this.permissionService.findByWithPagination(
       filterPermissionDto.page,
       filterPermissionDto.limit,
-      { resource, description, deleted_at: null },
+      { resource, description },
       [],
       filterPermissionDto.order,
     );
   }
 
   @Patch(':id')
+  @Serialize(PermissionDto)
   async update(
     @Param('id') id: string,
     @Body() updatePermissionDto: UpdatePermissionDto,
@@ -91,6 +94,7 @@ export class PermissionController {
   }
 
   @Delete(':id')
+  @Serialize(PermissionDto)
   async remove(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.permissionService.remove(findDto);

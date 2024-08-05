@@ -247,13 +247,13 @@ import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLowerCase()}.
 
 @UseGuards(JwtAuthGuard)
 @Controller('${moduleNameFilter.toLowerCase()}')
-@Serialize(${moduleNameFilter}Dto)
 @ApiTags('${moduleNameFilter.toLowerCase()}')
 @ApiBearerAuth()
 export class ${moduleNameFilter}Controller {
   constructor(private readonly ${moduleNameFilter.toLowerCase()}Service: ${moduleNameFilter}Service) {}
 
   @Post()
+  @Serialize(${moduleNameFilter}Dto)
   async create(@Body() create${moduleNameFilter}Dto: Create${moduleNameFilter}Dto) {
     const entity = plainToClass(${moduleNameFilter}, create${moduleNameFilter}Dto);
     return this.${moduleNameFilter.toLowerCase()}Service.create(entity);
@@ -261,14 +261,14 @@ export class ${moduleNameFilter}Controller {
 
   @Get()
   async findAllPagination(@Query() filter${moduleNameFilter}Dto: Filter${moduleNameFilter}Dto) {
-    const where = plainToClass(${moduleNameFilter}, { deleted_at: null });
+    const where = plainToClass(${moduleNameFilter}, {  });
     const nameTable = '${moduleNameFilter.toLowerCase()}';
     const searchColumns: (keyof ${moduleNameFilter})[] = [
       
     ];
     return this.${moduleNameFilter.toLowerCase()}Service.findByKeywordsWithPagination(
-      filter${moduleNameFilter}Dto.page,
-      filter${moduleNameFilter}Dto.limit,
+      filter${moduleNameFilter}Dto.page ?? 1,
+      filter${moduleNameFilter}Dto.limit ?? 10,
       nameTable,
       filter${moduleNameFilter}Dto.keywords,
       searchColumns,
@@ -279,14 +279,16 @@ export class ${moduleNameFilter}Controller {
   }
 
   @Get(':id')
+  @Serialize(${moduleNameFilter}Dto)
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.${moduleNameFilter.toLowerCase()}Service.findOne(findDto);
   }
 
   @Get('all')
+  @Serialize(${moduleNameFilter}Dto)
   async findAll() {
-    return this.${moduleNameFilter.toLowerCase()}Service.find({ deleted_at: null });
+    return this.${moduleNameFilter.toLowerCase()}Service.find({  });
   }
 
   @Post('search')
@@ -296,13 +298,14 @@ export class ${moduleNameFilter}Controller {
     return this.${moduleNameFilter.toLowerCase()}Service.findByWithPagination(
       filter${moduleNameFilter}Dto.page,
       filter${moduleNameFilter}Dto.limit,
-      { deleted_at: null },
+      {  },
       [],
       filter${moduleNameFilter}Dto.order,
     );
   }
 
   @Patch(':id')
+  @Serialize(${moduleNameFilter}Dto)
   async update(
     @Param('id') id: string,
     @Body() update${moduleNameFilter}Dto: Update${moduleNameFilter}Dto,
@@ -312,6 +315,7 @@ export class ${moduleNameFilter}Controller {
   }
 
   @Delete(':id')
+  @Serialize(${moduleNameFilter}Dto)
   async remove(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.${moduleNameFilter.toLowerCase()}Service.remove(findDto);

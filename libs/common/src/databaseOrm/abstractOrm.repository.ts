@@ -111,8 +111,16 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
     where: FindOptionsWhere<T>,
     relations: string[] = [],
     order: FindOptionsOrder<T> = {},
+    selectColumns: (keyof T)[] = [],
   ): Promise<PaginationEntity<T>> {
     const queryBuilder = this.entityRepository.createQueryBuilder(nameTable);
+
+    if (selectColumns.length > 0) {
+      queryBuilder.select([]);
+      selectColumns.forEach((column) => {
+        queryBuilder.addSelect(`${nameTable}.${String(column)}`);
+      });
+    }
 
     if (keywords) {
       searchColumns.forEach((column, index) => {
@@ -146,9 +154,7 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
     queryBuilder.skip((page - 1) * limit).take(limit);
 
     const [results, totalItems] = await queryBuilder.getManyAndCount();
-
     const totalPages = Math.ceil(totalItems / limit);
-
     return new PaginationEntity(
       results,
       page,

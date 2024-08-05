@@ -2,7 +2,6 @@ import {
   DatabaseOrmModule,
   LoggerModule,
   RoleModule,
-  RoleRepository,
 } from '@app/common';
 import { Module } from '@nestjs/common';
 import { User } from './models/user.entity';

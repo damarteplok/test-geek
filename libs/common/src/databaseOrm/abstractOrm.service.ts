@@ -56,6 +56,7 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
     attrs?: Partial<T>,
     relations?: string[],
     order?: FindOptionsOrder<T>,
+    selectColumns?: (keyof T)[],
   ): Promise<PaginationEntity<T>> {
     return this.repository.findByKeywordsWithPagination(
       page,
@@ -66,6 +67,7 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
       attrs as FindOptionsWhere<T>,
       relations,
       order,
+      selectColumns,
     );
   }
 

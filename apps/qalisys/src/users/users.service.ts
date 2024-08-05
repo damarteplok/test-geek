@@ -10,14 +10,20 @@ import { UsersRepository } from './users.repository';
 import { User } from './models/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { GetUserDto } from './dtos/get-user.dto';
-import { FindDto, RoleRepository } from '@app/common';
+import { AbstractOrmService, FindDto, RoleRepository } from '@app/common';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
-export class UsersService {
+export class UsersService extends AbstractOrmService<User> {
+  protected readonly repository: UsersRepository;
+
   constructor(
-    private readonly usersRepository: UsersRepository,
+    usersRepository: UsersRepository,
     private readonly roleRepository: RoleRepository,
-  ) {}
+  ) {
+    super();
+    this.repository = usersRepository;
+  }
 
   async create(createUserDto: CreateUserDto) {
     await this.validateCreateUserDto(createUserDto);
@@ -26,12 +32,12 @@ export class UsersService {
       ...createUserDto,
       password,
     });
-    return this.usersRepository.create(user);
+    return this.repository.create(user);
   }
 
   private async validateCreateUserDto(createUserDto: CreateUserDto) {
     try {
-      await this.usersRepository.findOne({
+      await this.repository.findOne({
         email: createUserDto.email,
         deleted_at: null,
       });
@@ -42,7 +48,7 @@ export class UsersService {
   }
 
   async verifyUser(email: string, password: string) {
-    const user = await this.usersRepository.findOne({
+    const user = await this.repository.findOne({
       email,
       deleted_at: null,
     });
@@ -54,28 +60,20 @@ export class UsersService {
   }
 
   async getUser(getUserDto: GetUserDto) {
-    return this.usersRepository.findOne({
+    return this.repository.findOne({
       id: getUserDto.id,
       deleted_at: null,
     });
   }
 
-  async find(attrs: Partial<User>) {
-    return this.usersRepository.find({ ...attrs });
-  }
-
-  async findOne(attr: FindDto) {
-    return this.usersRepository.findOne({ ...attr });
-  }
-
   async update(attr: FindDto, attrs: Partial<User>) {
-    const user = await this.usersRepository.findOne({ ...attr });
+    const user = await this.repository.findOne({ ...attr });
     if (!user) {
       throw new NotFoundException(`User with ID ${attr.id} not found`);
     }
     // check email
     if (attrs.email && attrs.email !== user.email) {
-      const existingUser = await this.usersRepository.findOne({
+      const existingUser = await this.repository.findOne({
         email: attrs.email,
       });
       if (existingUser) {
@@ -94,10 +92,6 @@ export class UsersService {
         throw new NotFoundException(`Role with ID ${attrs.roleId} not found`);
       }
     }
-    return this.usersRepository.findOneAndUpdate({ ...attr }, attrs);
-  }
-
-  async remove(attr: FindDto) {
-    return this.usersRepository.findOneAndDelete({ ...attr });
+    return this.repository.findOneAndUpdate({ ...attr }, attrs);
   }
 }
