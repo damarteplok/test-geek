@@ -20,13 +20,13 @@ export class User extends AbstractOrmEntity<User> {
   password: string;
 
   @Index()
-  @Column({ nullable: true })
+  @Column('varchar', { length: 256, nullable: true })
   name: string;
 
-  @Column({ nullable: true })
+  @Column('varchar', { length: 256, nullable: true })
   address: string;
 
-  @Column({ nullable: true })
+  @Column('varchar', { length: 256, nullable: true })
   contact: string;
 
   @Column({ nullable: true })

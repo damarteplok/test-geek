@@ -201,13 +201,8 @@ export class Camunda8Service {
 
   private isTokenExpired(token: string): boolean {
     try {
-      const decoded = jwt.decode(token) as { exp: number };
-      if (!decoded || !decoded.exp) {
-        return true;
-      }
-
-      const currentTime = Date.now() / 1000;
-      return decoded.exp < currentTime;
+      const decodedToken = jwt.decode(token) as { exp?: number } | null;
+      return (decodedToken?.exp ?? 0) * 1000 < Date.now();
     } catch (error) {
       return true;
     }

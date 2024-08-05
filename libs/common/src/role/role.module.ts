@@ -26,6 +26,6 @@ import { RoleRepository } from './role.repository';
   ],
   controllers: [RoleController],
   providers: [RoleService, RoleRepository],
-  exports: [RoleService],
+  exports: [RoleService, RoleRepository],
 })
 export class RoleModule {}

@@ -1,6 +1,8 @@
 import { CreateUserDto } from './dtos/create-user.dto';
 import {
+  BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -8,11 +10,14 @@ import { UsersRepository } from './users.repository';
 import { User } from './models/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { GetUserDto } from './dtos/get-user.dto';
-import { FindDto } from '@app/common';
+import { FindDto, RoleRepository } from '@app/common';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly roleRepository: RoleRepository,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     await this.validateCreateUserDto(createUserDto);
@@ -64,6 +69,31 @@ export class UsersService {
   }
 
   async update(attr: FindDto, attrs: Partial<User>) {
+    const user = await this.usersRepository.findOne({ ...attr });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${attr.id} not found`);
+    }
+    // check email
+    if (attrs.email && attrs.email !== user.email) {
+      const existingUser = await this.usersRepository.findOne({
+        email: attrs.email,
+      });
+      if (existingUser) {
+        throw new BadRequestException(
+          'Email is already in use by another user.',
+        );
+      }
+    }
+    // check roleID
+    if (attrs.roleId !== undefined) {
+      const role = await this.roleRepository.findOne({
+        id: attrs.roleId,
+        deleted_at: null,
+      });
+      if (!role) {
+        throw new NotFoundException(`Role with ID ${attrs.roleId} not found`);
+      }
+    }
     return this.usersRepository.findOneAndUpdate({ ...attr }, attrs);
   }
 

@@ -1,4 +1,9 @@
-import { DatabaseOrmModule, LoggerModule } from '@app/common';
+import {
+  DatabaseOrmModule,
+  LoggerModule,
+  RoleModule,
+  RoleRepository,
+} from '@app/common';
 import { Module } from '@nestjs/common';
 import { User } from './models/user.entity';
 import { UsersController } from './users.controller';
@@ -22,6 +27,7 @@ import * as Joi from 'joi';
     DatabaseOrmModule,
     DatabaseOrmModule.forFeature([User]),
     LoggerModule,
+    RoleModule,
   ],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository],
