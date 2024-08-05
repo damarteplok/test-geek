@@ -33,6 +33,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { USERS_AVATAR } from '@app/common/constants';
 import type { Response } from 'express';
 import { Stream } from 'stream';
+import { PermissionsGuard } from '../auth/guards/permission.guard';
 
 @Controller('users')
 @ApiTags('users')
@@ -148,7 +149,7 @@ export class UsersController {
   }
 
   @Get('avatar/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   async getAvatar(
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,

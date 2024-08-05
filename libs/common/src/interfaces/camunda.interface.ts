@@ -1,4 +1,5 @@
 import { JSONDoc } from '@camunda8/sdk/dist/zeebe/lib/interfaces-1.0';
+import { MethodList } from 'src/config';
 
 export interface Filter {
   key: number;
@@ -75,4 +76,11 @@ export interface VariablesBody {
 export interface CreateProcessInstanceBody {
   bpmnProcessId: string;
   variables?: JSONDoc;
+}
+export interface RoutePayloadInterface {
+  path: string;
+  method: MethodList;
+  resource?: string;
+  description?: string;
+  isDefault?: boolean;
 }
