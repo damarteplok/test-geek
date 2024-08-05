@@ -24,7 +24,6 @@ export class PermissionsGuard implements CanActivate {
     user: User,
     permissionAgainst: RoutePayloadInterface,
   ) {
-    console.log(user);
     const { path, method } = permissionAgainst;
     if (user && user.role && user.role.permission) {
       return user.role.permission.some(

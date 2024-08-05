@@ -1,5 +1,5 @@
 import { JSONDoc } from '@camunda8/sdk/dist/zeebe/lib/interfaces-1.0';
-import { MethodList } from 'src/config';
+import { MethodList } from '../config';
 
 export interface Filter {
   key: number;
