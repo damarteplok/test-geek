@@ -1,7 +1,5 @@
 import { IsIn, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
-import { PermissionEntity } from '../models/permission.entity';
-import { IsUnique } from '../../pipes/unique-validator.pipe';
 import { MethodList } from '../../config';
 import { ApiProperty } from '@nestjs/swagger';
 
