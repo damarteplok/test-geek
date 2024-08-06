@@ -1,12 +1,12 @@
 import { Controller, Post, Res, UseGuards } from '@nestjs/common';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { CurrentUser } from '@app/common/decorator/current-user.decorator';
 import { User } from '../users/models/user.entity';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { Serialize } from '@app/common';
 import { UserDto } from '../users/dtos/user.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Serialize } from '../interceptors';
+import { CurrentUser } from '../decorator';
 
 @ApiTags('auth')
 @Controller('auth')

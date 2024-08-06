@@ -21,17 +21,20 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { FindDto, MinioService, Roles, Serialize } from '@app/common';
 import { UserDto } from './dtos/user.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { plainToClass } from 'class-transformer';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { User } from './models/user.entity';
 import { FilterUserDto } from './dtos/filter-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { USERS_AVATAR } from '@app/common/constants';
 import type { Response } from 'express';
+import { MinioService } from '../minio';
+import { Serialize } from '../interceptors';
+import { JwtAuthGuard } from '../guards';
+import { FindDto } from '../dto';
+import { USERS_AVATAR } from '../constants';
+import { Roles } from '../decorator';
 import { PermissionsGuard } from '../auth/guards/permission.guard';
 
 @Controller('users')
@@ -52,7 +55,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   async findAllPagination(@Query() filterUserDto: FilterUserDto) {
     const where = plainToClass(User, {});
-    const nameTable = 'user';
+    const nameTable = 'users';
     const searchColumns: (keyof User)[] = ['name', 'address', 'contact'];
     const results = await this.usersService.findByKeywordsWithPagination(
       filterUserDto.page ?? 1,
@@ -64,6 +67,7 @@ export class UsersController {
       ['role'],
       filterUserDto.order,
       [
+        'id',
         'name',
         'address',
         'contact',

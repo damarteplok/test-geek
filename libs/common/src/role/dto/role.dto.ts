@@ -1,8 +1,8 @@
-import { UserDto } from './../../../../../apps/qalisys/src/users/dtos/user.dto';
 import { DateTime } from 'luxon';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import { PermissionDto } from '../../permission/dto/permission.dto';
+import { UserDto } from '../../users/dtos/user.dto';
 
 export const adminUserGroupsForSerializing: string[] = ['admin'];
 export const basicFieldGroupsForSerializing: string[] = ['basic'];

@@ -1,9 +1,3 @@
-import {
-  DatabaseOrmModule,
-  LoggerModule,
-  MinioService,
-  RoleModule,
-} from '@app/common';
 import { Module } from '@nestjs/common';
 import { User } from './models/user.entity';
 import { UsersController } from './users.controller';
@@ -11,6 +5,10 @@ import { UsersService } from './users.service';
 import { UsersRepository } from './users.repository';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { DatabaseOrmModule } from '../databaseOrm';
+import { LoggerModule } from '../logger';
+import { RoleModule } from '../role';
+import { MinioService } from '../minio';
 
 @Module({
   imports: [

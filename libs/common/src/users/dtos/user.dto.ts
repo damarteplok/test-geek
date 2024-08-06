@@ -1,8 +1,8 @@
-import { UserStatusEnum } from '@app/common';
-import { RoleDto } from '@app/common/role/dto/role.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import { DateTime } from 'luxon';
+import { UserStatusEnum } from '../../config';
+import { RoleDto } from '../../role/dto/role.dto';
 
 export class UserDto {
   @ApiProperty()

@@ -1,8 +1,8 @@
-import { CommonSearchFieldDto } from '@app/common';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { FindOptionsOrder } from 'typeorm';
 import { User } from '../models/user.entity';
+import { CommonSearchFieldDto } from '../../dto/common-search-field.dto';
 
 export class FilterUserDto extends PartialType(CommonSearchFieldDto) {
   @ApiProperty()

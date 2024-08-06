@@ -160,7 +160,6 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
     }
 
     queryBuilder.skip((page - 1) * limit).take(limit);
-
     const [results, totalItems] = await queryBuilder.getManyAndCount();
     const totalPages = Math.ceil(totalItems / limit);
     return new PaginationEntity(

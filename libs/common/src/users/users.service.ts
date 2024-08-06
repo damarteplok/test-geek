@@ -10,9 +10,11 @@ import { UsersRepository } from './users.repository';
 import { User } from './models/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { GetUserDto } from './dtos/get-user.dto';
-import { AbstractOrmService, FindDto, RoleRepository } from '@app/common';
-import { RoleEntity } from '@app/common/role/models/role.entity';
 import { In } from 'typeorm';
+import { AbstractOrmService } from '../databaseOrm';
+import { RoleRepository } from '../role';
+import { FindDto } from '../dto';
+import { RoleEntity } from '../role/models/role.entity';
 
 @Injectable()
 export class UsersService extends AbstractOrmService<User> {

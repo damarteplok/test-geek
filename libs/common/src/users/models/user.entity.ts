@@ -1,6 +1,5 @@
-import { AbstractOrmEntity, UserStatusEnum } from '@app/common';
-import { RoleEntity } from '@app/common/role/models/role.entity';
 import { Exclude } from 'class-transformer';
+import { AbstractOrmEntity } from '../../databaseOrm';
 import {
   Column,
   CreateDateColumn,
@@ -9,6 +8,8 @@ import {
   JoinTable,
   ManyToMany,
 } from 'typeorm';
+import { UserStatusEnum } from '../../config';
+import { RoleEntity } from '../../role/models/role.entity';
 
 @Entity()
 export class User extends AbstractOrmEntity<User> {

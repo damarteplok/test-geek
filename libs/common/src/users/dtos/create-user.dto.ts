@@ -1,4 +1,3 @@
-import { UserStatusEnum } from '@app/common';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
@@ -9,6 +8,7 @@ import {
   IsStrongPassword,
   MaxLength,
 } from 'class-validator';
+import { UserStatusEnum } from '../../config';
 
 export class CreateUserDto {
   @ApiProperty()
