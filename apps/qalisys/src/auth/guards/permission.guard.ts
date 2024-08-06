@@ -21,8 +21,6 @@ export class PermissionsGuard implements CanActivate {
       method,
     };
 
-    console.log(permissionPayload, 'permissionPayload');
-
     const user = request.user;
 
     if (!user) {
@@ -39,7 +37,6 @@ export class PermissionsGuard implements CanActivate {
       const hasPermission = arr.some((role) =>
         requiredPermissions.includes(role.name),
       );
-
       if (!hasPermission) {
         throw new ForbiddenException(
           'You do not have permission to access this resource',
@@ -56,10 +53,12 @@ export class PermissionsGuard implements CanActivate {
     const { path, method } = permissionAgainst;
     if (user && user.role && user.role.length > 0) {
       for (const role of user.role) {
+        console.log(role, 'role');
         if (role.permission && role.permission.length > 0) {
           const hasPermission = role.permission.some(
             (permission) =>
-              permission.path === path && permission.method === method,
+              // permission.path === path && permission.method === method,
+              permission.method === method,
           );
           if (hasPermission) {
             return true;

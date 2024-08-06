@@ -51,10 +51,13 @@ export class UsersService extends AbstractOrmService<User> {
   }
 
   async verifyUser(email: string, password: string) {
-    const user = await this.repository.findOne({
-      email,
-      deleted_at: null,
-    });
+    const user = await this.repository.findOne(
+      {
+        email,
+        deleted_at: null,
+      },
+      ['role', 'role.permission'],
+    );
     const passwordIsValid = await bcrypt.compare(password, user.password);
     if (!passwordIsValid) {
       throw new UnauthorizedException('Credentials are invalid');
@@ -63,10 +66,13 @@ export class UsersService extends AbstractOrmService<User> {
   }
 
   async getUser(getUserDto: GetUserDto) {
-    return this.repository.findOne({
-      id: getUserDto.id,
-      deleted_at: null,
-    });
+    return this.repository.findOne(
+      {
+        id: getUserDto.id,
+        deleted_at: null,
+      },
+      ['role', 'role.permission'],
+    );
   }
 
   async update(attr: FindDto, attrs: Partial<User>, relations?: string[]) {
