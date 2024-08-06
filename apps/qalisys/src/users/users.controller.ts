@@ -21,7 +21,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { FindDto, MinioService, Serialize } from '@app/common';
+import { FindDto, MinioService, Roles, Serialize } from '@app/common';
 import { UserDto } from './dtos/user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -32,7 +32,6 @@ import { FilterUserDto } from './dtos/filter-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { USERS_AVATAR } from '@app/common/constants';
 import type { Response } from 'express';
-import { Stream } from 'stream';
 import { PermissionsGuard } from '../auth/guards/permission.guard';
 
 @Controller('users')
@@ -62,7 +61,7 @@ export class UsersController {
       filterUserDto.keywords,
       searchColumns,
       where,
-      [],
+      ['role'],
       filterUserDto.order,
       [
         'name',
@@ -81,7 +80,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Serialize(UserDto)
   async findAllNoPagination() {
-    return this.usersService.find({});
+    const where = plainToClass(User, {});
+    return this.usersService.findWithRelations(where, ['role']);
   }
 
   @Get(':id')
@@ -89,7 +89,7 @@ export class UsersController {
   @Serialize(UserDto)
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.usersService.findOne(findDto);
+    return this.usersService.findOne(findDto, ['role']);
   }
 
   @Patch(':id')
@@ -100,7 +100,8 @@ export class UsersController {
       throw new BadRequestException('Id required');
     }
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.usersService.update(findDto, updateUserDto);
+    const userEntity = plainToClass(User, updateUserDto);
+    return this.usersService.update(findDto, userEntity);
   }
 
   @Delete(':id')
@@ -150,6 +151,7 @@ export class UsersController {
 
   @Get('avatar/:id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles('admin', 'user')
   async getAvatar(
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,

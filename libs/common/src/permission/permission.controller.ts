@@ -50,7 +50,7 @@ export class PermissionController {
       filterPermissionDto.keywords,
       searchColumns,
       where,
-      [],
+      ['role'],
       filterPermissionDto.order,
     );
   }
@@ -59,13 +59,14 @@ export class PermissionController {
   @Serialize(PermissionDto)
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.permissionService.findOne(findDto);
+    return this.permissionService.findOne(findDto, ['role']);
   }
 
   @Get('all')
   @Serialize(PermissionDto)
   async findAll() {
-    return this.permissionService.find({});
+    const where = plainToClass(PermissionEntity, {});
+    return this.permissionService.findWithRelations(where, ['role']);
   }
 
   // searching with post biasa dipake utk advance searching
@@ -78,7 +79,7 @@ export class PermissionController {
       filterPermissionDto.page,
       filterPermissionDto.limit,
       { resource, description },
-      [],
+      ['role'],
       filterPermissionDto.order,
     );
   }
@@ -94,7 +95,6 @@ export class PermissionController {
   }
 
   @Delete(':id')
-  @Serialize(PermissionDto)
   async remove(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.permissionService.remove(findDto);

@@ -6,8 +6,8 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
-  OneToOne,
+  JoinTable,
+  ManyToMany,
 } from 'typeorm';
 
 @Entity()
@@ -39,12 +39,20 @@ export class User extends AbstractOrmEntity<User> {
   })
   status: UserStatusEnum;
 
-  @OneToOne(() => RoleEntity)
-  @JoinColumn()
-  role: RoleEntity;
-
-  @Column({ nullable: true })
-  roleId: number;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @ManyToMany(() => RoleEntity, (role) => role.user, { cascade: true })
+  @JoinTable({
+    name: 'role_user',
+    joinColumn: {
+      name: 'userId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'roleId',
+      referencedColumnName: 'id',
+    },
+  })
+  role: RoleEntity[];
 
   @Column({
     nullable: true,
@@ -67,4 +75,6 @@ export class User extends AbstractOrmEntity<User> {
     default: false,
   })
   isTwoFAEnabled: boolean;
+
+  roles?: number[];
 }

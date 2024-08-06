@@ -1,6 +1,7 @@
 import { UserStatusEnum } from '@app/common';
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsEmail,
   IsEnum,
   IsOptional,
@@ -22,31 +23,32 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   @MaxLength(256, { message: 'Name cannot be longer than 256 characters' })
-  name: string;
+  name?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
   @MaxLength(256, { message: 'Name cannot be longer than 256 characters' })
-  address: string;
+  address?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
   @MaxLength(256, { message: 'Name cannot be longer than 256 characters' })
-  contact: string;
+  contact?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  avatar: string;
+  avatar?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsEnum(UserStatusEnum)
-  status: UserStatusEnum;
+  status?: UserStatusEnum;
 
   @ApiProperty()
   @IsOptional()
-  roleId: number;
+  @IsArray()
+  roles?: number[];
 }

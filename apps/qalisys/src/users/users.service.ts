@@ -11,6 +11,8 @@ import { User } from './models/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { GetUserDto } from './dtos/get-user.dto';
 import { AbstractOrmService, FindDto, RoleRepository } from '@app/common';
+import { RoleEntity } from '@app/common/role/models/role.entity';
+import { In } from 'typeorm';
 
 @Injectable()
 export class UsersService extends AbstractOrmService<User> {
@@ -27,9 +29,11 @@ export class UsersService extends AbstractOrmService<User> {
   async create(createUserDto: CreateUserDto) {
     await this.validateCreateUserDto(createUserDto);
     const password = await bcrypt.hash(createUserDto.password, 10);
+    const roles = await this.checkRoleId(createUserDto.roles);
     const user = new User({
       ...createUserDto,
       password,
+      role: roles,
     });
     return this.repository.create(user);
   }
@@ -65,7 +69,7 @@ export class UsersService extends AbstractOrmService<User> {
     });
   }
 
-  async update(attr: FindDto, attrs: Partial<User>) {
+  async update(attr: FindDto, attrs: Partial<User>, relations?: string[]) {
     const user = await this.repository.findOne({ ...attr });
     if (!user) {
       throw new NotFoundException(`User with ID ${attr.id} not found`);
@@ -81,15 +85,38 @@ export class UsersService extends AbstractOrmService<User> {
         );
       }
     }
-    // check roleID
-    if (attrs.roleId !== undefined) {
-      const role = await this.roleRepository.findOne({
-        id: attrs.roleId,
+    // check if have roles
+    if (attrs.roles) {
+      const roles = await this.checkRoleId(attrs.roles);
+      attrs.role = roles;
+      const role = await this.repository.findOne({
+        id: attr.id,
       });
+
       if (!role) {
-        throw new NotFoundException(`Role with ID ${attrs.roleId} not found`);
+        throw new NotFoundException(`User with ID ${attr.id} not found`);
       }
+      Object.assign(role, attrs);
+
+      return this.repository.save(role);
     }
-    return this.repository.findOneAndUpdate({ ...attr }, attrs);
+
+    return this.repository.findOneAndUpdate({ ...attr }, attrs, relations);
+  }
+
+  private async checkRoleId(arr: number[] = []): Promise<RoleEntity[]> {
+    const roles = await this.roleRepository.find({
+      id: In(arr),
+    });
+
+    if (roles.length !== arr.length) {
+      const invalidRoleIds = arr.filter(
+        (id) => !roles.some((el) => el.id === id),
+      );
+      throw new NotFoundException(
+        `Roles with IDs [${invalidRoleIds.join(', ')}] not found`,
+      );
+    }
+    return roles;
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 import { AbstractOrmEntity } from './abstractOrm.entity';
 import { AbstractOrmRepository } from './abstractOrm.repository';
@@ -14,7 +14,9 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
   }
 
   async find(attrs: Partial<T>): Promise<T[]> {
-    return this.repository.find(attrs as FindOptionsWhere<T>);
+    return this.repository.find(
+      attrs as FindOptionsWhere<T> | FindOptionsWhere<T>[],
+    );
   }
 
   async findWithRelations(
@@ -22,13 +24,16 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
     relations?: string[],
   ): Promise<T[]> {
     return this.repository.findWithRelations(
-      attrs as FindOptionsWhere<T>,
+      attrs as FindOptionsWhere<T> | FindOptionsWhere<T>[],
       relations,
     );
   }
 
   async findOne(attr: Partial<T>, relations?: string[]): Promise<T> {
-    return this.repository.findOne(attr as FindOptionsWhere<T>, relations);
+    return this.repository.findOne(
+      attr as FindOptionsWhere<T> | FindOptionsWhere<T>[],
+      relations,
+    );
   }
 
   async findByWithPagination(
@@ -41,7 +46,7 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
     return this.repository.findByWithPagination(
       page,
       limit,
-      attrs as FindOptionsWhere<T>,
+      attrs as FindOptionsWhere<T> | FindOptionsWhere<T>[],
       relations,
       order,
     );
@@ -64,7 +69,7 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
       nameTable,
       keywords,
       searchColumns,
-      attrs as FindOptionsWhere<T>,
+      attrs as FindOptionsWhere<T> | FindOptionsWhere<T>[],
       relations,
       order,
       selectColumns,
@@ -83,7 +88,13 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
     );
   }
 
-  async remove(attr: Partial<T>): Promise<void> {
-    await this.repository.findOneAndDelete(attr as FindOptionsWhere<T>);
+  async remove(attr: Partial<T>): Promise<any> {
+    const result = await this.repository.findOneAndDelete(
+      attr as FindOptionsWhere<T>,
+    );
+    if (result.affected) {
+      return { message: 'success', statusCode: 200 };
+    }
+    throw new InternalServerErrorException();
   }
 }

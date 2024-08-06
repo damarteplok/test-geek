@@ -32,7 +32,6 @@ export class RoleController {
   @Serialize(RoleDto)
   async create(@Body() createRoleDto: CreateRoleDto) {
     const roleEntity = plainToClass(RoleEntity, createRoleDto);
-
     return this.roleService.create(roleEntity);
   }
 
@@ -48,22 +47,23 @@ export class RoleController {
       filterRoleDto.keywords,
       searchColumns,
       where,
-      [],
+      ['permission', 'user'],
       filterRoleDto.order,
     );
+  }
+
+  @Get('all')
+  @Serialize(RoleDto)
+  async findAll() {
+    const where = plainToClass(RoleEntity, {});
+    return this.roleService.findWithRelations(where, ['permission', 'user']);
   }
 
   @Get(':id')
   @Serialize(RoleDto)
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.roleService.findOne(findDto);
-  }
-
-  @Get('all')
-  @Serialize(RoleDto)
-  async findAll() {
-    return this.roleService.find({});
+    return this.roleService.findOne(findDto, ['permission', 'user']);
   }
 
   // searching with post biasa dipake utk advance searching
@@ -74,7 +74,7 @@ export class RoleController {
       filterRoleDto.page,
       filterRoleDto.limit,
       { name, description },
-      [],
+      ['permission', 'user'],
       filterRoleDto.order,
     );
   }
@@ -83,11 +83,11 @@ export class RoleController {
   @Serialize(RoleDto)
   async update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.roleService.update(findDto, updateRoleDto, []);
+    const roleEntity = plainToClass(RoleEntity, updateRoleDto);
+    return this.roleService.update(findDto, roleEntity, ['permission', 'user']);
   }
 
   @Delete(':id')
-  @Serialize(RoleDto)
   async remove(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.roleService.remove(findDto);

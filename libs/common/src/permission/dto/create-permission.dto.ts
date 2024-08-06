@@ -26,9 +26,6 @@ export class CreatePermissionDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  @IsUnique(PermissionEntity, 'description', {
-    message: 'description already exists',
-  })
   description: string;
 
   @ApiProperty()

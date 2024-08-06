@@ -1,7 +1,8 @@
+import { UserDto } from './../../../../../apps/qalisys/src/users/dtos/user.dto';
 import { DateTime } from 'luxon';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
-import { PermissionEntity } from '../../permission/models/permission.entity';
+import { PermissionDto } from '../../permission/dto/permission.dto';
 
 export const adminUserGroupsForSerializing: string[] = ['admin'];
 export const basicFieldGroupsForSerializing: string[] = ['basic'];
@@ -17,10 +18,15 @@ export class RoleDto {
   @Expose()
   description: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: [PermissionDto] })
   @Expose()
-  @Type(() => PermissionEntity)
-  permission: PermissionEntity[];
+  @Type(() => PermissionDto)
+  permission: PermissionDto[];
+
+  @ApiProperty({ type: [UserDto] })
+  @Expose()
+  @Type(() => UserDto)
+  user: UserDto[];
 
   @ApiProperty()
   @Expose()

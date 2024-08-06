@@ -23,8 +23,12 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
     return this.entityManager.save(entity);
   }
 
+  async save(entity: T): Promise<T> {
+    return this.entityRepository.save(entity);
+  }
+
   async findOne(
-    where: FindOptionsWhere<T>,
+    where: FindOptionsWhere<T> | FindOptionsWhere<T>[],
     relations: string[] = [],
   ): Promise<T> {
     const entity = await this.entityRepository.findOne({ where, relations });
@@ -51,12 +55,12 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
     return this.findOne(where, relations);
   }
 
-  async find(where: FindOptionsWhere<T>): Promise<T[]> {
+  async find(where: FindOptionsWhere<T> | FindOptionsWhere<T>[]): Promise<T[]> {
     return this.entityRepository.findBy(where);
   }
 
   async findWithRelations(
-    where: FindOptionsWhere<T>,
+    where: FindOptionsWhere<T> | FindOptionsWhere<T>[],
     relations: string[],
   ): Promise<T[]> {
     return this.entityRepository.find({
@@ -77,7 +81,7 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
   async findByWithPagination(
     page: number,
     limit: number,
-    where: FindOptionsWhere<T>,
+    where: FindOptionsWhere<T> | FindOptionsWhere<T>[],
     relations: string[] = [],
     order: FindOptionsOrder<T> = {},
   ): Promise<PaginationEntity<T>> {
@@ -108,7 +112,7 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
     nameTable: string,
     keywords: string,
     searchColumns: (keyof T)[],
-    where: FindOptionsWhere<T>,
+    where: FindOptionsWhere<T> | FindOptionsWhere<T>[],
     relations: string[] = [],
     order: FindOptionsOrder<T> = {},
     selectColumns: (keyof T)[] = [],
@@ -135,14 +139,18 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
 
     Object.keys(where).forEach((key, index) => {
       if (index === 0 && !keywords) {
-        queryBuilder.where(`entity.${key} = :${key}`, { [key]: where[key] });
+        queryBuilder.where(`${nameTable}.${key} = :${key}`, {
+          [key]: where[key],
+        });
       } else {
-        queryBuilder.andWhere(`entity.${key} = :${key}`, { [key]: where[key] });
+        queryBuilder.andWhere(`${nameTable}.${key} = :${key}`, {
+          [key]: where[key],
+        });
       }
     });
 
     relations.forEach((relation) => {
-      queryBuilder.leftJoinAndSelect(`entity.${relation}`, relation);
+      queryBuilder.leftJoinAndSelect(`${nameTable}.${relation}`, relation);
     });
 
     if (Object.keys(order).length) {

@@ -315,7 +315,6 @@ export class ${moduleNameFilter}Controller {
   }
 
   @Delete(':id')
-  @Serialize(${moduleNameFilter}Dto)
   async remove(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.${moduleNameFilter.toLowerCase()}Service.remove(findDto);

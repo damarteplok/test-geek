@@ -7,6 +7,7 @@ import { RoleEntity } from './models/role.entity';
 import { RoleController } from './role.controller';
 import { RoleService } from './role.service';
 import { RoleRepository } from './role.repository';
+import { PermissionModule } from '../permission';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { RoleRepository } from './role.repository';
     DatabaseOrmModule,
     DatabaseOrmModule.forFeature([RoleEntity]),
     LoggerModule,
+    PermissionModule,
   ],
   controllers: [RoleController],
   providers: [RoleService, RoleRepository],

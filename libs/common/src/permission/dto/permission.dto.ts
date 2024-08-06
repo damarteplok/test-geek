@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Transform } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { DateTime } from 'luxon';
+import { RoleDto } from '../../role/dto/role.dto';
 
 export const basicFieldGroupsForSerializing: string[] = ['basic'];
 
@@ -28,6 +29,11 @@ export class PermissionDto {
   @ApiProperty()
   @Expose()
   isDefault: boolean;
+
+  @ApiProperty()
+  @Expose()
+  @Type(() => RoleDto)
+  role: RoleDto[];
 
   @ApiProperty()
   @Expose()

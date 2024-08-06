@@ -6,8 +6,6 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { RoleEntity } from '../models/role.entity';
-import { IsUnique } from '../../pipes/unique-validator.pipe';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRoleDto {
@@ -19,9 +17,6 @@ export class CreateRoleDto {
   })
   @MaxLength(100, {
     message: 'maxLength-{"ln":100,"count":100}',
-  })
-  @IsUnique(RoleEntity, 'name', {
-    message: 'description already exists',
   })
   name: string;
 
