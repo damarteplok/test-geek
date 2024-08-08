@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Camunda8 } from '@camunda8/sdk';
 import {
   CreateProcessInstanceBody,
+  DeployCamundaResponse,
   SearchProcessDefinitionBody,
   SearchTasksBody,
   TaskVariablesBody,
@@ -69,7 +70,7 @@ export class Camunda8Service {
     });
   }
 
-  async deployBpmn(key: string, file: Buffer): Promise<any> {
+  async deployBpmn(key: string, file: Buffer): Promise<DeployCamundaResponse> {
     const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
 
     try {
@@ -644,7 +645,7 @@ export class Camunda8Service {
     return processElement.flowElements
       .filter((element) => element.$type === 'bpmn:UserTask')
       .map((userTask) => {
-        if (userTask.documentation && userTask.documentation.length) {
+        if (userTask.documentation?.length) {
           return {
             name: userTask.id,
             processVariables: userTask.documentation[0].text?.toString(),

@@ -28,6 +28,7 @@ import {
   TaskVariablesDto,
   VariablesDto,
 } from '../dto';
+import { DeployCamundaResponse } from '../interfaces';
 
 @Controller('camunda')
 export class Camunda8Controller {
@@ -86,11 +87,13 @@ export class Camunda8Controller {
         key,
       });
       const res = await this.camunda8Service.deployBpmn(key, file.buffer);
+      console.log(res);
       if (auto_generate) {
         this.handleAutoGenerate(
           processElement,
           userTaskElement,
           serviceTaskElement,
+          res,
         );
       }
       return { message: 'success', statusCode: 200, data: res };
@@ -103,13 +106,16 @@ export class Camunda8Controller {
     processElement: string,
     userTaskElements: { name: string; processVariables: string }[],
     serviceTaskElements: string[],
+    dataCamunda: DeployCamundaResponse,
   ) {
+    console.log(dataCamunda, 'dataCamunda')
     if (processElement) {
       this.bpmnParserService.generateCrud(
         processElement,
         PROCESS,
         '',
         serviceTaskElements,
+        dataCamunda,
       );
     }
 
@@ -119,6 +125,8 @@ export class Camunda8Controller {
           userTask.name,
           USERTASK,
           userTask.processVariables,
+          [],
+          dataCamunda,
         );
       }
     }

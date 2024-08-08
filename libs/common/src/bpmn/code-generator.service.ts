@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PROCESS, USERTASK } from '../constants';
+import { DeployCamundaResponse } from '../interfaces';
 
 @Injectable()
 export class CodeGeneratorService {
@@ -32,35 +33,51 @@ export class CodeGeneratorService {
   }
 
   private generateFilterProcess = `
-    @Expose()
-    bpmnProcessId: string;
-  
-    @Expose()
-    processInstanceKey: string;
+  @Expose()
+  processDefinitionKey: string;
 
-    @Expose()
-    processDefinitionKey: string;
+  @Expose()
+  bpmnProcessId: string;
 
-    @Expose()
-    formId: string;
+  @Expose()
+  version: number;
 
-    @Expose()
-    taskDefinitionId: string;
+  @Expose()
+  path_minio: string;
 
-    @Expose()
-    taskId: string;
+  @Expose()
+  servicesTask: string;
 
-    @Expose()
-    version: number;
+  @Expose()
+  processInstanceKey: string;
 
-    @Expose()
-    path_minio: string;
+  @Expose()
+  formId: string;
+
+  @Expose()
+  taskDefinitionId: string;
+
+  @Expose()
+  taskId: string;
   `;
   private generateFilterUserTask = `
-    ${this.generateFilterProcess}
+  @Expose()
+  processDefinitionKey: string;
 
-    @Expose()
-    processVariables: string;
+  @Expose()
+  processVariables: string;
+
+  @Expose()
+  processInstanceKey: string;
+
+  @Expose()
+  formId: string;
+
+  @Expose()
+  taskDefinitionId: string;
+
+  @Expose()
+  taskId: string;
   `;
 
   private generateDtos(moduleName: string, typeGenerate: string = ''): void {
@@ -129,12 +146,34 @@ export class Update${moduleNameFilter}Dto {
 
     const moduleContentFilter = `
 import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsOptional, ${typeGenerate !== '' ? 'IsString' : ''} } from 'class-validator';
 import { CommonSearchFieldDto } from '@app/common';
 import { FindOptionsOrder } from 'typeorm';
 import { ${moduleNameFilter} } from '../models/${moduleNameFilter.toLowerCase()}.entity';
 
 export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldDto) {
+  ${
+    typeGenerate !== ''
+      ? `@ApiPropertyOptional({
+    type: 'processDefinitionKey',
+    description:
+      'Search by processDefinitionKey, e.g., { "processDefinitionKey": "xxxx" }',
+  })
+  @IsOptional()
+  @IsString()
+  processDefinitionKey: string;
+
+  @ApiPropertyOptional({
+    type: 'processInstanceKey',
+    description:
+      'Search by processInstanceKey, e.g., { "processInstanceKey": "xxxx" }',
+  })
+  @IsOptional()
+  @IsString()
+  processInstanceKey: string;`
+      : ''
+  }
+  
   @ApiPropertyOptional({
     type: Object,
     description:
@@ -154,19 +193,49 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
     );
   }
 
-  private generateModelsUserTask(processVariables: string = ''): string {
+  private generateModelsUserTask(
+    processVariables: string = '',
+    dataCamunda: DeployCamundaResponse | undefined = undefined,
+  ): string {
+    const nameParent = dataCamunda
+      ? this.toPascalCase(dataCamunda?.bpmnProcessId)
+      : null;
+    const oneToOneStr = nameParent
+      ? `
+  @OneToOne(() => ${nameParent}, {onDelete: 'CASCADE'})
+  @JoinColumn()
+  ${nameParent.toLowerCase()}: ${nameParent}; 
+    `
+      : ``;
     return `
-    @Column({ type: 'varchar', nullable: true, default: "${processVariables}" })
-    processVariables: string;
-  
+  @Column('varchar', { length: 256, nullable: true, default: "${dataCamunda?.processDefinitionKey}" })
+  processDefinitionKey: string;
+
+  @Column('varchar', { length: 256, nullable: true, default: "${processVariables}" })
+  processVariables: string;
+  ${oneToOneStr}
   `;
   }
 
-  private generateModelsServiceTask(serviceTaskElement: string[] = []): string {
+  private generateModelsServiceTask(
+    serviceTaskElement: string[] = [],
+    dataCamunda: DeployCamundaResponse | undefined = undefined,
+  ): string {
     return `
-    @Column({ type: 'varchar', nullable: true, default: "${serviceTaskElement.join()}" })
-    processVariables: string;
-  
+  @Column('varchar', { length: 256, default: "${dataCamunda?.processDefinitionKey}" })
+  processDefinitionKey: string;
+
+  @Column('varchar', { length: 256, default: "${dataCamunda?.bpmnProcessId}" })
+  bpmnProcessId: string;
+
+  @Column({ type: 'integer', nullable: true, default: ${dataCamunda?.version} })
+  version: number;
+
+  @Column('varchar', { length: 256, nullable: true, default: "${dataCamunda?.resourceName}" })
+  path_minio: string;
+
+  @Column('varchar', { length: 256, nullable: true, default: "${serviceTaskElement.join()}" })
+  servicesTask: string;
   `;
   }
 
@@ -175,19 +244,22 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
     typeGenerate: string = '',
     processVariables: string = '',
     serviceTaskElement: string[] = [],
+    dataCamunda: DeployCamundaResponse | undefined = undefined,
   ): void {
     const moduleDir = this.generateFolder(moduleName, 'models');
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
 import { ${typeGenerate === '' ? 'AbstractOrmEntity' : 'AbstractBpmnOrmEntity'} } from '@app/common';
-import { Column, Entity } from 'typeorm';
+import { ${typeGenerate === PROCESS ? 'Unique, ' : ''}Column, Entity${typeGenerate === USERTASK && dataCamunda?.bpmnProcessId ? ', OneToOne, JoinColumn' : ''} } from 'typeorm';
+${typeGenerate === USERTASK && dataCamunda?.bpmnProcessId ? `import { ${this.toPascalCase(dataCamunda?.bpmnProcessId)} } from '../../${this.toPascalCase(dataCamunda?.bpmnProcessId).toLowerCase()}/models/${this.toPascalCase(dataCamunda?.bpmnProcessId).toLowerCase()}.entity';` : ''}
 
 @Entity({
   name: '${moduleNameFilter.toLocaleLowerCase()}',
 })
+${typeGenerate === PROCESS && dataCamunda?.bpmnProcessId ? `@Unique(['bpmnProcessId'])` : ''}
 export class ${moduleNameFilter} extends ${typeGenerate === '' ? 'AbstractOrmEntity' : 'AbstractBpmnOrmEntity'}<${moduleNameFilter}> {
-  ${typeGenerate === USERTASK ? this.generateModelsUserTask(processVariables) : ''}
-  ${typeGenerate === PROCESS ? this.generateModelsServiceTask(serviceTaskElement) : ''}
+  ${typeGenerate === USERTASK ? this.generateModelsUserTask(processVariables, dataCamunda) : ''}
+  ${typeGenerate === PROCESS ? this.generateModelsServiceTask(serviceTaskElement, dataCamunda) : ''}
 }
 
     `;
@@ -418,9 +490,16 @@ export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameF
     bpmn: string = '',
     processVariables: string = '',
     serviceTaskElement: string[] = [],
+    dataCamunda: DeployCamundaResponse | undefined = undefined,
   ): void {
     this.generateFolder(moduleName);
-    this.generateModels(moduleName, bpmn, processVariables, serviceTaskElement);
+    this.generateModels(
+      moduleName,
+      bpmn,
+      processVariables,
+      serviceTaskElement,
+      dataCamunda,
+    );
     this.generateDtos(moduleName, bpmn);
     this.generateRepository(moduleName);
     this.generateService(moduleName);

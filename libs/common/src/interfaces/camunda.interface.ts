@@ -123,3 +123,11 @@ export interface RoutePayloadInterface {
   description?: string;
   isDefault?: boolean;
 }
+
+export interface DeployCamundaResponse {
+  bpmnProcessId: string;
+  version: number;
+  processDefinitionKey: string;
+  resourceName: string;
+  tenantId: string;
+}
