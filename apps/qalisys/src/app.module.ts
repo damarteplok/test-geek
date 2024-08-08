@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import {
   AuthModule,
-  UsersModule,
+  UsersModule as BaseUsersModule,
   Camunda8Module,
   LoggerModule,
   PermissionModule,
@@ -13,15 +13,21 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { DecideDinnerModule } from './decidedinner/decidedinner.module';
+import { DecideForDinnerModule } from './decidefordinner/decidefordinner.module';
+import { MintaBilingModule } from './mintabiling/mintabiling.module';
 
 @Module({
   imports: [
     LoggerModule,
     AuthModule,
-    UsersModule,
+    BaseUsersModule,
     PermissionModule,
     RoleModule,
     Camunda8Module,
+    DecideForDinnerModule,
+    DecideDinnerModule,
+    MintaBilingModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

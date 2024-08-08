@@ -211,7 +211,7 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
   @Column('varchar', { length: 256, nullable: true, default: "${dataCamunda?.processDefinitionKey}" })
   processDefinitionKey: string;
 
-  @Column('varchar', { length: 256, nullable: true, default: "${processVariables}" })
+  @Column({ type: 'text', nullable: true, default: '${JSON.stringify(processVariables)}' })
   processVariables: string;
   ${oneToOneStr}
   `;
