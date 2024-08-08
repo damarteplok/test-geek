@@ -3,12 +3,20 @@ import { IsOptional, IsString, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CommonSearchFieldDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    type: 'keywords',
+    description: 'Search by keywords, e.g., { "keywords": "xxxx" }',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   keywords: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    type: 'limit',
+    description: 'Search by limit, e.g., { "limit": "xxxx" }',
+    required: false,
+  })
   @IsOptional()
   @Transform(({ value }) => Number.parseInt(value), {
     toClassOnly: true,
@@ -18,7 +26,11 @@ export class CommonSearchFieldDto {
   })
   limit: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    name: 'page',
+    description: 'Search by limit, e.g., { "page": "xxxx" }',
+    required: false,
+  })
   @IsOptional()
   @Transform(({ value }) => Number.parseInt(value, 10), {
     toClassOnly: true,
