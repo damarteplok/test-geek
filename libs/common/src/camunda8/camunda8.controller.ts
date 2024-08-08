@@ -18,7 +18,7 @@ import {
 import { BpmnParserService, BpmnValidator } from '../bpmn';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MinioService } from '../minio/minio.service';
-import { SUCCESS, USERS_BUCKET } from '../constants';
+import { PROCESS, SUCCESS, USERS_BUCKET, USERTASK } from '../constants';
 import { Camunda8Service } from './camunda8.service';
 import {
   CreateProcessInstanceDto,
@@ -65,21 +65,62 @@ export class Camunda8Controller {
       }),
     )
     file: Express.Multer.File,
+    @Query('auto_generate') auto_generate?: string,
   ): Promise<SuccessResponseDto> {
     try {
       const bpmnData = await this.bpmnParserService.parseBpmnFromUpload(
         file.buffer,
       );
-      const key = `${bpmnData.rootElement.id}-${file.originalname}`;
+      // get mode process
+      const processElement = this.camunda8Service.getProcessId(bpmnData);
+      // get userTask
+      const userTaskElement = this.camunda8Service.getUserTaskIds(bpmnData);
+      // get serviceTask
+      const serviceTaskElement =
+        this.camunda8Service.getServiceTaskIds(bpmnData);
+
+      const key = `bpmn-${bpmnData.rootElement.id}-${file.originalname}`;
       await this.minioService.uploadFile({
         bucket: USERS_BUCKET,
         file: file.buffer,
         key,
       });
       const res = await this.camunda8Service.deployBpmn(key, file.buffer);
+      if (auto_generate) {
+        this.handleAutoGenerate(
+          processElement,
+          userTaskElement,
+          serviceTaskElement,
+        );
+      }
       return { message: 'success', statusCode: 200, data: res };
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  private handleAutoGenerate(
+    processElement: string,
+    userTaskElements: { name: string; processVariables: string }[],
+    serviceTaskElements: string[],
+  ) {
+    if (processElement) {
+      this.bpmnParserService.generateCrud(
+        processElement,
+        PROCESS,
+        '',
+        serviceTaskElements,
+      );
+    }
+
+    if (userTaskElements.length) {
+      for (const userTask of userTaskElements) {
+        this.bpmnParserService.generateCrud(
+          userTask.name,
+          USERTASK,
+          userTask.processVariables,
+        );
+      }
     }
   }
 
@@ -89,7 +130,7 @@ export class Camunda8Controller {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 100000 }),
+          new MaxFileSizeValidator({ maxSize: 1000000 }),
           new FileTypeValidator({ fileType: 'application/octet-stream' }),
         ],
       }),
@@ -97,15 +138,16 @@ export class Camunda8Controller {
     file: Express.Multer.File,
   ): Promise<SuccessResponseDto> {
     try {
-      const key = `${file.originalname}`;
+      const key = `form-${file.originalname}`;
       await this.minioService.uploadFile({
         bucket: USERS_BUCKET,
         file: file.buffer,
         key,
       });
-      return { message: SUCCESS, statusCode: 200 };
+      const res = await this.camunda8Service.deployForm(key, file.buffer);
+      return { message: 'success', statusCode: 200, data: res };
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 

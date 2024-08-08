@@ -7,6 +7,7 @@ import {
   SearchProcessDefinitionBody,
   SearchTasksBody,
   TaskVariablesBody,
+  UserTaskInfo,
   VariablesBody,
 } from '../interfaces';
 import {
@@ -84,7 +85,27 @@ export class Camunda8Service {
         );
       }
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async deployForm(key: string, file: Buffer): Promise<any> {
+    const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
+
+    try {
+      const deploy = await zeebe.deployResource({
+        name: key,
+        form: file,
+      });
+      if (deploy.deployments && deploy.deployments.length > 0) {
+        return deploy.deployments[0].form;
+      } else {
+        throw new InternalServerErrorException(
+          'Deployment failed: No deployments found in the response',
+        );
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -100,7 +121,7 @@ export class Camunda8Service {
       });
       return result;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -111,7 +132,7 @@ export class Camunda8Service {
       const result = await zeebe.cancelProcessInstance(key);
       return result;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -138,11 +159,6 @@ export class Camunda8Service {
           body: formData.toString(),
         },
       );
-
-      if (!response.ok) {
-        throw new InternalServerErrorException(`Error`);
-      }
-
       const data = await response.json();
       this.authToken = data.access_token;
       this.refreshToken = data.refresh_token;
@@ -150,7 +166,7 @@ export class Camunda8Service {
       await this.getAuthToken();
       return { message: this.authToken, statusCode: 200 };
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -166,7 +182,6 @@ export class Camunda8Service {
     );
     formData.append('grant_type', 'refresh_token');
     formData.append('refresh_token', this.refreshToken);
-
     try {
       const response = await fetch(
         this.configService.get<string>('CAMUNDA_OAUTH_URL'),
@@ -178,17 +193,12 @@ export class Camunda8Service {
           body: formData.toString(),
         },
       );
-
-      if (!response.ok) {
-        throw new InternalServerErrorException(`Error during token refresh`);
-      }
-
       const data = await response.json();
       this.authToken = data.access_token;
       this.refreshToken = data.refresh_token;
       this.setConfigHeader();
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -228,7 +238,7 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -246,7 +256,7 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -264,7 +274,7 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -282,7 +292,7 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -300,7 +310,7 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -321,7 +331,7 @@ export class Camunda8Service {
       const data = await response.text();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -342,7 +352,7 @@ export class Camunda8Service {
       const data = await response.text();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -397,7 +407,7 @@ export class Camunda8Service {
     key: string,
     processDefinitionKey?: string,
   ): Promise<any> {
-    let url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_FORM_URL}/${key}`;
+    let url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_FORM_URL}/${key}`;
 
     if (processDefinitionKey) {
       const urlObj = new URL(url);
@@ -417,12 +427,12 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async searchTasklistTasksByKey(key: string): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}`;
+    const url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_TASK_URL}/${key}`;
 
     try {
       const token = await this.getAuthToken();
@@ -436,12 +446,12 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async searchTasklistVariablesByKey(key: string): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_VARIABLE_URL}/${key}`;
+    const url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_VARIABLE_URL}/${key}`;
 
     try {
       const token = await this.getAuthToken();
@@ -455,12 +465,12 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async searchTasks(body: Partial<SearchTasksBody>): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/search`;
+    const url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_TASK_URL}/search`;
     try {
       const token = await this.getAuthToken();
       const response = await fetch(url, {
@@ -474,7 +484,7 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -482,7 +492,7 @@ export class Camunda8Service {
     key: string,
     body: Partial<TaskVariablesBody>,
   ): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/variables/search`;
+    const url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_TASK_URL}/${key}/variables/search`;
     try {
       const token = await this.getAuthToken();
       const response = await fetch(url, {
@@ -496,7 +506,7 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -504,7 +514,7 @@ export class Camunda8Service {
     key: string,
     body: Partial<VariablesBody>,
   ): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/variables`;
+    const url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_TASK_URL}/${key}/variables`;
     try {
       const token = await this.getAuthToken();
       const response = await fetch(url, {
@@ -518,18 +528,20 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async patchTasksAssign(key: string): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/assign`;
+    const url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_TASK_URL}/${key}/assign`;
     try {
       const token = await this.getAuthToken();
       const response = await fetch(url, {
         method: 'PATCH',
         headers: { ...this.configHeader, Authorization: `Bearer ${token}` },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          assignee: 'demo',
+        }),
       });
       if (!response.ok) {
         throw new InternalServerErrorException(`Error`);
@@ -537,12 +549,12 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async patchTasksUnassign(key: string): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/unassign`;
+    const url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_TASK_URL}/${key}/unassign`;
     try {
       const token = await this.getAuthToken();
       const response = await fetch(url, {
@@ -556,7 +568,7 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -564,7 +576,10 @@ export class Camunda8Service {
     key: string,
     body: Partial<VariablesBody>,
   ): Promise<any> {
-    const url = `${this.configService.get<string>('CAMUNDA_OPERATE_BASE_URL')}${TASKLIST_TASK_URL}/${key}/complete`;
+    body.variables.map((el) => {
+      el.value = JSON.stringify(el.value);
+    });
+    const url = `${this.configService.get<string>('CAMUNDA_TASKLIST_BASE_URL')}${TASKLIST_TASK_URL}/${key}/complete`;
     try {
       const token = await this.getAuthToken();
       const response = await fetch(url, {
@@ -578,7 +593,68 @@ export class Camunda8Service {
       const data = await response.json();
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
+  }
+
+  // service get elements
+
+  getProcessId(bpmnData: any): string {
+    const processElement = bpmnData.rootElement.rootElements.find(
+      (element) => element.$type === 'bpmn:Process',
+    );
+    return processElement ? processElement.id : null;
+  }
+
+  getServiceTaskIds(bpmnData: any): string[] {
+    const processElement = bpmnData.rootElement.rootElements.find(
+      (element) => element.$type === 'bpmn:Process',
+    );
+
+    if (!processElement) {
+      return [];
+    }
+
+    const arrService = processElement.flowElements.filter(
+      (element) => element.$type === 'bpmn:ServiceTask',
+    );
+    let arrServiceName = [];
+    arrService.forEach((serviceTask) => {
+      if (
+        serviceTask.extensionElements &&
+        serviceTask.extensionElements.$type === 'bpmn:ExtensionElements'
+      ) {
+        serviceTask.extensionElements.values.forEach((el) => {
+          arrServiceName.push(el.type);
+        });
+      }
+    });
+    return arrServiceName;
+  }
+
+  getUserTaskIds(bpmnData: any): UserTaskInfo[] {
+    const processElement = bpmnData.rootElement.rootElements.find(
+      (element) => element.$type === 'bpmn:Process',
+    );
+
+    if (!processElement) {
+      return [];
+    }
+
+    return processElement.flowElements
+      .filter((element) => element.$type === 'bpmn:UserTask')
+      .map((userTask) => {
+        if (userTask.documentation && userTask.documentation.length) {
+          return {
+            name: userTask.id,
+            processVariables: userTask.documentation[0].text?.toString(),
+          };
+        } else {
+          return {
+            name: userTask.id,
+            processVariables: null,
+          };
+        }
+      });
   }
 }

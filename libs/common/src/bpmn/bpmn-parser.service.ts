@@ -13,7 +13,7 @@ export class BpmnParserService extends CodeGeneratorService {
       const bpmnXml = fileBuffer.toString('utf8');
       return await this.moddle.fromXML(bpmnXml);
     } catch (err) {
-      throw new InternalServerErrorException(err);
+      throw new InternalServerErrorException(err.message);
     }
   }
 
@@ -23,7 +23,7 @@ export class BpmnParserService extends CodeGeneratorService {
       return await this.moddle.fromXML(bpmnXml);
     } catch (err) {
       console.error(`Error reading BPMN file: ${filePath}`, err);
-      throw new InternalServerErrorException(err);
+      throw new InternalServerErrorException(err.message);
     }
   }
 
@@ -41,7 +41,7 @@ export class BpmnParserService extends CodeGeneratorService {
       return parsedFiles;
     } catch (err) {
       console.error(`Error reading BPMN folder: ${folderPath}`, err);
-      throw new InternalServerErrorException(err);
+      throw new InternalServerErrorException(err.message);
     }
   }
 }

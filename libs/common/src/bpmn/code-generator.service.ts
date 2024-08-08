@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
+import { PROCESS, USERTASK } from '../constants';
 
 @Injectable()
 export class CodeGeneratorService {
@@ -30,7 +31,39 @@ export class CodeGeneratorService {
     return moduleDir;
   }
 
-  private generateDtos(moduleName: string): void {
+  private generateFilterProcess = `
+    @Expose()
+    bpmnProcessId: string;
+  
+    @Expose()
+    processInstanceKey: string;
+
+    @Expose()
+    processDefinitionKey: string;
+
+    @Expose()
+    formId: string;
+
+    @Expose()
+    taskDefinitionId: string;
+
+    @Expose()
+    taskId: string;
+
+    @Expose()
+    version: number;
+
+    @Expose()
+    path_minio: string;
+  `;
+  private generateFilterUserTask = `
+    ${this.generateFilterProcess}
+
+    @Expose()
+    processVariables: string;
+  `;
+
+  private generateDtos(moduleName: string, typeGenerate: string = ''): void {
     const moduleDir = this.generateFolder(moduleName, 'dtos');
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
@@ -40,6 +73,10 @@ import { DateTime } from 'luxon';
 export class ${moduleNameFilter}Dto {
   @Expose()
   id: number;
+
+  ${typeGenerate === PROCESS ? this.generateFilterProcess : ''}
+
+  ${typeGenerate === USERTASK ? this.generateFilterUserTask : ''}
 
   @Expose()
   @Transform(({ value }) =>
@@ -91,7 +128,7 @@ export class Update${moduleNameFilter}Dto {
     );
 
     const moduleContentFilter = `
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 import { CommonSearchFieldDto } from '@app/common';
 import { FindOptionsOrder } from 'typeorm';
@@ -117,25 +154,40 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
     );
   }
 
-  private generateModels(moduleName: string): void {
+  private generateModelsUserTask(processVariables: string = ''): string {
+    return `
+    @Column({ type: 'varchar', nullable: true, default: "${processVariables}" })
+    processVariables: string;
+  
+  `;
+  }
+
+  private generateModelsServiceTask(serviceTaskElement: string[] = []): string {
+    return `
+    @Column({ type: 'varchar', nullable: true, default: "${serviceTaskElement.join()}" })
+    processVariables: string;
+  
+  `;
+  }
+
+  private generateModels(
+    moduleName: string,
+    typeGenerate: string = '',
+    processVariables: string = '',
+    serviceTaskElement: string[] = [],
+  ): void {
     const moduleDir = this.generateFolder(moduleName, 'models');
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
-import { AbstractOrmEntity } from '@app/common';
+import { ${typeGenerate === '' ? 'AbstractOrmEntity' : 'AbstractBpmnOrmEntity'} } from '@app/common';
 import { Column, Entity } from 'typeorm';
 
 @Entity({
   name: '${moduleNameFilter.toLocaleLowerCase()}',
 })
-export class ${moduleNameFilter} extends AbstractOrmEntity<${moduleNameFilter}> {
-  @Column({ type: 'varchar', nullable: true })
-  process_instance_id: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  process_definition_id: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  business_key: string;
+export class ${moduleNameFilter} extends ${typeGenerate === '' ? 'AbstractOrmEntity' : 'AbstractBpmnOrmEntity'}<${moduleNameFilter}> {
+  ${typeGenerate === USERTASK ? this.generateModelsUserTask(processVariables) : ''}
+  ${typeGenerate === PROCESS ? this.generateModelsServiceTask(serviceTaskElement) : ''}
 }
 
     `;
@@ -146,7 +198,10 @@ export class ${moduleNameFilter} extends AbstractOrmEntity<${moduleNameFilter}> 
     );
   }
 
-  private generateRepository(moduleName: string): void {
+  private generateRepository(
+    moduleName: string,
+    typeGenerate: string = '',
+  ): void {
     const moduleDir = this.generateFolder(moduleName);
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
@@ -358,10 +413,15 @@ export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameF
     );
   }
 
-  generateCrud(moduleName: string): void {
+  generateCrud(
+    moduleName: string,
+    bpmn: string = '',
+    processVariables: string = '',
+    serviceTaskElement: string[] = [],
+  ): void {
     this.generateFolder(moduleName);
-    this.generateModels(moduleName);
-    this.generateDtos(moduleName);
+    this.generateModels(moduleName, bpmn, processVariables, serviceTaskElement);
+    this.generateDtos(moduleName, bpmn);
     this.generateRepository(moduleName);
     this.generateService(moduleName);
     this.generateController(moduleName);

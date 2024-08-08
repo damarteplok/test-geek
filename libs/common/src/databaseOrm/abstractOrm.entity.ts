@@ -9,6 +9,10 @@ export class AbstractOrmEntity<T> {
   @PrimaryGeneratedColumn()
   id: number;
 
+  constructor(entity: Partial<T>) {
+    Object.assign(this, entity);
+  }
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
@@ -26,8 +30,4 @@ export class AbstractOrmEntity<T> {
 
   @Column({ type: 'timestamp', nullable: true })
   deleted_at: Date;
-
-  constructor(entity: Partial<T>) {
-    Object.assign(this, entity);
-  }
 }

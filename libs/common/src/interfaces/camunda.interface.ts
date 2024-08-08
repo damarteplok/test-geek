@@ -1,12 +1,51 @@
 import { JSONDoc } from '@camunda8/sdk/dist/zeebe/lib/interfaces-1.0';
 import { MethodList } from '../config';
 
+export interface UserTaskInfo {
+  name: string;
+  processVariables: string | undefined;
+}
+
 export interface Filter {
   key: number;
+
   name: string;
+
   version: number;
+
   bpmnProcessId: string;
+
+  processInstanceKey: string;
+
+  processDefinitionKey: string;
+
+  state: string;
+
+  processVersion: string;
+
   tenantId: string;
+
+  startDate: string;
+
+  endDate: string;
+
+  incident: boolean;
+
+  flowNodeId: string;
+
+  flowNodeName: string;
+
+  decisionId: string;
+
+  decisionDefinitionId: string;
+
+  decisionName: string;
+
+  decisionRequirementsId: string;
+
+  decisionRequirementsName: string;
+
+  decisionRequirementsKey: number;
 }
 
 export interface Sort {

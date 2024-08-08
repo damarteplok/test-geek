@@ -10,3 +10,5 @@ export const OPERATE_INCIDENT_URL = '/v1/incidents';
 export const TASKLIST_FORM_URL = '/v1/forms';
 export const TASKLIST_TASK_URL = '/v1/tasks';
 export const TASKLIST_VARIABLE_URL = '/v1/variables';
+export const PROCESS = 'Process';
+export const USERTASK = 'UserTask';
