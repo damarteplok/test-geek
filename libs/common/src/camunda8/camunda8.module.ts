@@ -6,10 +6,13 @@ import { BpmnParserService, CodeGeneratorService } from '../bpmn';
 import { MinioService } from '../minio';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { TelegramService } from './telegram.service';
+import { MailerService, MailModule } from '../mailer';
 
 @Module({
   imports: [
     MinioModule,
+    MailModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -27,6 +30,9 @@ import * as Joi from 'joi';
         CAMUNDA_OPERATE_BASE_URL: Joi.string().required(),
         CAMUNDA_OPTIMIZE_BASE_URL: Joi.string().required(),
         CAMUNDA_MODELER_BASE_URL: Joi.string().required(),
+        TELEGRAM_TOKEN: Joi.string(),
+        TELEGRAM_CHAT_ID: Joi.string(),
+        TELEGRAM_TOPIC_ID: Joi.string(),
       }),
     }),
   ],
@@ -35,6 +41,8 @@ import * as Joi from 'joi';
     BpmnParserService,
     CodeGeneratorService,
     MinioService,
+    TelegramService,
+    MailerService,
   ],
   controllers: [Camunda8Controller],
   exports: [
@@ -42,6 +50,7 @@ import * as Joi from 'joi';
     MinioService,
     BpmnParserService,
     CodeGeneratorService,
+    TelegramService,
   ],
 })
 export class Camunda8Module {}

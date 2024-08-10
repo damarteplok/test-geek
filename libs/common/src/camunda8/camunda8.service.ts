@@ -25,6 +25,8 @@ import {
   TASKLIST_VARIABLE_URL,
 } from '../constants';
 import * as jwt from 'jsonwebtoken';
+import { TelegramService } from './telegram.service';
+import { MailerService } from '../mailer';
 
 @Injectable()
 export class Camunda8Service {
@@ -45,7 +47,11 @@ export class Camunda8Service {
     return this.configHeader;
   }
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly telegramService: TelegramService,
+    private readonly mailerService: MailerService,
+  ) {
     this.client = new Camunda8({
       ZEEBE_GRPC_ADDRESS: configService.get<string>('ZEEBE_GRPC_ADDRESS'),
       ZEEBE_REST_ADDRESS: configService.get<string>('ZEEBE_REST_ADDRESS'),
@@ -592,6 +598,24 @@ export class Camunda8Service {
         throw new InternalServerErrorException(`Error`);
       }
       const data = await response.json();
+      this.createWorkerTaskZeebe('service-notif', async (job) => {
+        const response = await this.telegramService.sendMessage(
+          JSON.stringify(job),
+        );
+        return { result: response.status };
+      });
+      this.createWorkerTaskZeebe('service-notif-message-end', async (job) => {
+        const context = {
+          name: 'Damar',
+          company: 'DamarCorp',
+          text: JSON.stringify(job),
+        };
+        const to = 'damar@damar.com';
+        await this.mailerService.sendMail(to, 'Test', context);
+        return job.complete({
+          serviceTaskOutcome: 'We did it!',
+        });
+      });
       return data;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -657,5 +681,29 @@ export class Camunda8Service {
           };
         }
       });
+  }
+
+  // service task test
+
+  createWorkerTaskZeebe(
+    serviceName: string,
+    taskHandlerJob: (job: any) => Promise<any>,
+  ): void {
+    const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
+    try {
+      zeebe.createWorker({
+        taskType: serviceName,
+        taskHandler: async (job) => {
+          try {
+            const result = await taskHandlerJob(job);
+            return job.complete(result);
+          } catch (error) {
+            return job.fail(error.message);
+          }
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 }
