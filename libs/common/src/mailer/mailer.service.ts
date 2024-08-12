@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService as NestMailerService } from '@nestjs-modules/mailer';
+import * as Handlebars from 'handlebars';
 
 @Injectable()
 export class MailerService {
@@ -9,19 +10,23 @@ export class MailerService {
     to: string,
     subject: string,
     context: { [key: string]: string },
+    templateHandlebars: string,
   ): Promise<void> {
-    const template = this.generateTemplate(context);
+    const template = this.generateTemplate(context, templateHandlebars);
 
-    await this.mailerService.sendMail({
+    const response = await this.mailerService.sendMail({
       to,
       subject,
       html: template,
       context,
     });
+    return response;
   }
 
-  private generateTemplate(context: { [key: string]: string }): string {
-    return `
+  /**
+   *
+   * contoh penggunaan
+   * const template = `
       <html>
       <head>
         <style>
@@ -35,17 +40,29 @@ export class MailerService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Test to Our Service, ${context.name}!</h1>
+            <h1>Welcome to Our Service, {{name}}!</h1>
           </div>
           <div class="body">
-            <p>Dear ${context.name},</p>
-            <p>${context.text}</p>
-            <p>woke</p>
-            <p>Best regards,<br>The ${context.company} Team</p>
+            <p>Dear {{name}},</p>
+            <p>{{text}}</p>
+            {{#if additionalInfo}}
+            <p>{{additionalInfo}}</p>
+            {{/if}}
+            <p>Best regards,<br>The {{company}} Team</p>
+          </div>
+          <div class="footer">
+            <p>{{footerText}}</p>
           </div>
         </div>
       </body>
       </html>
     `;
+   */
+  private generateTemplate(
+    context: { [key: string]: string },
+    template: string,
+  ): string {
+    const compiledTemplate = Handlebars.compile(template);
+    return compiledTemplate(context);
   }
 }

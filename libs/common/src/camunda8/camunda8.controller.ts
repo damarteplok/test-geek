@@ -87,7 +87,6 @@ export class Camunda8Controller {
         key,
       });
       const res = await this.camunda8Service.deployBpmn(key, file.buffer);
-      console.log(res);
       if (auto_generate) {
         this.handleAutoGenerate(
           processElement,
@@ -108,7 +107,6 @@ export class Camunda8Controller {
     serviceTaskElements: string[],
     dataCamunda: DeployCamundaResponse,
   ) {
-    console.log(dataCamunda, 'dataCamunda')
     if (processElement) {
       this.bpmnParserService.generateCrud(
         processElement,

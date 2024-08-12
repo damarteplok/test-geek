@@ -1,6 +1,6 @@
 {
   "name": "damarhuda-camunda-common",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Camunda Common utilities for NestJS projects",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@camunda8/sdk": "^8.6.8",
+    "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.3",
@@ -27,7 +28,9 @@
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
     "express": "^4.19.2",
+    "handlebars": "^4.7.8",
     "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
     "luxon": "^3.4.4",
     "minio": "^8.0.1",
     "mongoose": "^8.4.4",
@@ -42,7 +45,8 @@
     "pino-pretty": "^11.2.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
