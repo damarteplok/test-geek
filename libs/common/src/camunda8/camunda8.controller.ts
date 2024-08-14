@@ -51,7 +51,10 @@ export class Camunda8Controller {
     return { message: SUCCESS, statusCode: 200 };
   }
 
-  // ZEEBE
+  /**
+   *
+   * ZEBEE CONTROLLER
+   */
 
   @Post('deploy-bpmn')
   @UseInterceptors(FileInterceptor('file'))
@@ -176,7 +179,11 @@ export class Camunda8Controller {
     return { message: SUCCESS, statusCode: 200, data };
   }
 
-  // URL OPERATE CAMUNDA
+  /**
+   *
+   * CONTROLLER OPERATE CAMUNDA
+   *
+   */
 
   @Post('operate/search/:type')
   async operateSearch(
@@ -262,7 +269,11 @@ export class Camunda8Controller {
     return this.camunda8Service.searchProcessDecisionByKeyAsXml(key);
   }
 
-  // URL TASKLIST CAMUNDA
+  /**
+   *
+   * CONTROLLER TASKLIST CAMUNDA
+   *
+   */
 
   @Get('tasklist/forms/:key')
   async tasklistFormSearch(
@@ -370,6 +381,17 @@ export class Camunda8Controller {
       throw new BadRequestException('Key required');
     }
     const data = await this.camunda8Service.patchTasksComplete(key, body);
+    return { message: SUCCESS, statusCode: 200, data };
+  }
+
+  /**
+   *
+   * CONTROLLER OPTIMIZE CAMUNDA
+   */
+
+  @Get('optimize/readiness')
+  async optimizeGetReadiness(): Promise<SuccessResponseDto> {
+    const data = await this.camunda8Service.getReadiness();
     return { message: SUCCESS, statusCode: 200, data };
   }
 }

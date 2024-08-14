@@ -688,6 +688,7 @@ export class Camunda8Service {
     taskHandlerJob: (job: any) => Promise<any>,
   ): void {
     const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
+
     try {
       zeebe.createWorker({
         taskType: serviceName,
@@ -751,5 +752,12 @@ export class Camunda8Service {
           }
         }),
       );
+  }
+
+  // optimise
+
+  async getReadiness(): Promise<any> {
+    const zeebe = this.client.getOptimizeApiClient();
+    return await zeebe.getReadiness();
   }
 }

@@ -16,3 +16,4 @@ export * from './users';
 export * from './auth';
 export * from './constants';
 export * from './mailer';
+export * from './notification';
