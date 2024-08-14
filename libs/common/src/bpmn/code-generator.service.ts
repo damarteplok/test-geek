@@ -423,17 +423,17 @@ export class ${moduleNameFilter}Controller {
     );
   }
 
+  @Get('all')
+  @Serialize(${moduleNameFilter}Dto)
+  async findAll() {
+    return this.${moduleNameFilter.toLowerCase()}Service.find({  });
+  }
+
   @Get(':id')
   @Serialize(${moduleNameFilter}Dto)
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.${moduleNameFilter.toLowerCase()}Service.findOne(findDto);
-  }
-
-  @Get('all')
-  @Serialize(${moduleNameFilter}Dto)
-  async findAll() {
-    return this.${moduleNameFilter.toLowerCase()}Service.find({  });
   }
 
   @Post('search')

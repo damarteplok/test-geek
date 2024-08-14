@@ -5,7 +5,6 @@ export class PesenKeRestorantDto {
   @Expose()
   id: number;
 
-  
   @Expose()
   processDefinitionKey: string;
 
@@ -32,9 +31,6 @@ export class PesenKeRestorantDto {
 
   @Expose()
   taskId: string;
-  
-
-  
 
   @Expose()
   @Transform(({ value }) =>
