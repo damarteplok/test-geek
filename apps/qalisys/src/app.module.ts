@@ -13,6 +13,9 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { PesenKeRestorantModule } from './pesenkerestorant/pesenkerestorant.module';
+import { DecideDinnerModule } from './decidedinner/decidedinner.module';
+import { MintaBilingModule } from './mintabiling/mintabiling.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { ConfigModule } from '@nestjs/config';
     PermissionModule,
     RoleModule,
     Camunda8Module,
+    PesenKeRestorantModule,
+    DecideDinnerModule,
+    MintaBilingModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

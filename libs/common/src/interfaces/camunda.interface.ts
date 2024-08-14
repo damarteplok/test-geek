@@ -115,12 +115,12 @@ export interface DeployCamundaResponse {
 }
 
 export interface ProcessModel {
-  startProcess(): Promise<void>;
-  startService(): Promise<void>;
+  startProcess(extraData?: any): Promise<any>;
+  startService(extraData?: any): Promise<any>;
 }
 
 export interface SubmittableModel {
-  submitTask(): Promise<void>;
-  removeTask?(): Promise<void>;
-  revertTask?(): Promise<void>;
+  submitTask(extraData?: any): Promise<any>;
+  removeTask?(extraData?: any): Promise<any>;
+  revertTask?(extraData?: any): Promise<any>;
 }

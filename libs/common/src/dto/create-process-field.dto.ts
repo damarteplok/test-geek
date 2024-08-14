@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNumber, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateProcessFieldDto {
   @ApiProperty()
@@ -70,4 +71,9 @@ export class CreateProcessFieldDto {
     message: 'taskId cannot be longer than 256 characters',
   })
   taskId: string;
+
+  @IsOptional()
+  @IsObject()
+  @Type(() => Object)
+  variables?: Record<string, any>;
 }

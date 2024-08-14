@@ -135,7 +135,7 @@ export class Create${moduleNameFilter}Dto ${typeGenerate === PROCESS ? 'extends 
 import { PartialType } from '@nestjs/swagger';
 import { Create${moduleNameFilter}Dto } from './create-${moduleNameFilter.toLocaleLowerCase()}.dto';
 
-export class Update${moduleNameFilter}Dto extends PartialType(${moduleNameFilter}Dto){
+export class Update${moduleNameFilter}Dto extends PartialType(Create${moduleNameFilter}Dto){
   
 }
     `;
@@ -235,7 +235,7 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
   processDefinitionKey: string;
 
   @Column('varchar', { length: 256, default: "${dataCamunda?.bpmnProcessId}" })
-  bpmnProcessId: string;
+  bpmnProcessId: string = "${dataCamunda?.bpmnProcessId}";
 
   @Column({ type: 'integer', nullable: true, default: ${dataCamunda?.version} })
   version: number;
@@ -270,7 +270,7 @@ ${typeGenerate === USERTASK && dataCamunda?.bpmnProcessId ? `import { ${this.toP
 @Entity({
   name: '${moduleNameFilter.toLocaleLowerCase()}',
 })
-${typeGenerate === PROCESS && dataCamunda?.bpmnProcessId ? `@Unique(['bpmnProcessId'])` : ''}
+${typeGenerate === PROCESS && dataCamunda?.bpmnProcessId ? `@Unique(['processInstanceKey'])` : ''}
 export class ${moduleNameFilter} extends ${typeGenerate === '' ? 'AbstractOrmEntity' : 'AbstractBpmnOrmEntity'}<${moduleNameFilter}> {
   ${typeGenerate === USERTASK ? this.generateModelsUserTask(processVariables, formId, dataCamunda) : ''}
   ${typeGenerate === PROCESS ? this.generateModelsServiceTask(serviceTaskElement, dataCamunda, bpmnMessage) : ''}
@@ -323,7 +323,7 @@ export class ${moduleNameFilter}Repository extends AbstractOrmRepository<${modul
     const moduleDir = this.generateFolder(moduleName);
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
-import { DatabaseOrmModule, LoggerModule } from '@app/common';
+import { Camunda8Service, DatabaseOrmModule, LoggerModule } from '@app/common';
 import { Module } from '@nestjs/common';
 import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLocaleLowerCase()}.entity';
 import { ${moduleNameFilter}Controller } from './${moduleNameFilter.toLocaleLowerCase()}.controller';
@@ -349,7 +349,11 @@ import * as Joi from 'joi';
     LoggerModule,
   ],
   controllers: [${moduleNameFilter}Controller],
-  providers: [${moduleNameFilter}Service, ${moduleNameFilter}Repository],
+  providers: [
+    ${moduleNameFilter}Service, 
+    ${moduleNameFilter}Repository,
+    Camunda8Service,
+  ],
   exports: [${moduleNameFilter}Service],
 })
 export class ${moduleNameFilter}Module {}
@@ -477,28 +481,49 @@ export class ${moduleNameFilter}Controller {
     const moduleDir = this.generateFolder(moduleName);
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ${moduleNameFilter}Repository } from './${moduleNameFilter.toLowerCase()}.repository';
 import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLocaleLowerCase()}.entity';
-import { AbstractOrmService${typeGenerate === PROCESS ? ', ProcessModel' : ''}${typeGenerate === USERTASK ? ', SubmittableModel' : ''} } from '@app/common';
+import { Camunda8Service, AbstractOrmService${typeGenerate === PROCESS ? ', ProcessModel' : ''}${typeGenerate === USERTASK ? ', SubmittableModel' : ''} } from '@app/common';
 
 @Injectable()
 export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameFilter}>${typeGenerate === PROCESS ? ' implements ProcessModel' : ''}${typeGenerate === USERTASK ? ' implements SubmittableModel' : ''} {
   protected readonly repository: ${moduleNameFilter}Repository;
 
-  constructor(${moduleNameFilter.toLocaleLowerCase()}Repository: ${moduleNameFilter}Repository) {
+  constructor(
+    ${moduleNameFilter.toLocaleLowerCase()}Repository: ${moduleNameFilter}Repository,
+    private readonly camunda8Service: Camunda8Service,
+  ) {
     super();
     this.repository = ${moduleNameFilter.toLocaleLowerCase()}Repository;
   }
   ${
     typeGenerate === PROCESS
-      ? `async startProcess(): Promise<void> {
+      ? `async startProcess(entity: ${moduleNameFilter}): Promise<any> {
     // Implementasi logika untuk memulai proses
+    try {
+      const res = await this.camunda8Service.createProcessInstance({
+        bpmnProcessId: entity.bpmnProcessId
+      })
+      return res
+    } catch(error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async startService(): Promise<void> {
     // Implementasi logika untuk memulai layanan
-  }`
+  }
+    
+  protected async beforeCreate(entity: ${moduleNameFilter}, extraData?: any): Promise<void> {
+    const res = await this.startProcess(entity)
+    entity.processDefinitionKey = res.processDefinitionKey;
+    entity.bpmnProcessId = res.bpmnProcessId;
+    entity.version = res.version;
+    entity.processInstanceKey = res.processInstanceKey;
+  }
+  
+  `
       : ''
   }
   ${

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateSubmitableFieldDto {
   @ApiProperty()
@@ -46,4 +47,9 @@ export class CreateSubmitableFieldDto {
     message: 'taskId cannot be longer than 256 characters',
   })
   taskId: string;
+
+  @IsOptional()
+  @IsObject()
+  @Type(() => Object)
+  variables?: Record<string, any>;
 }
