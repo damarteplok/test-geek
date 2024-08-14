@@ -115,8 +115,10 @@ export class ${moduleNameFilter}Dto {
     );
 
     const moduleContentCreate = `
+${typeGenerate === PROCESS ? `import { CreateProcessFieldDto } from '@app/common';` : ''}
+${typeGenerate === USERTASK ? `import { CreateSubmitableFieldDto } from '@app/common';` : ''}
 
-export class Create${moduleNameFilter}Dto {
+export class Create${moduleNameFilter}Dto ${typeGenerate === PROCESS ? 'extends CreateProcessFieldDto' : ''}${typeGenerate === USERTASK ? 'extends CreateSubmitableFieldDto' : ''}{
   
 }
     `;
@@ -130,8 +132,10 @@ export class Create${moduleNameFilter}Dto {
     );
 
     const moduleContentUpdate = `
+import { PartialType } from '@nestjs/swagger';
+import { Create${moduleNameFilter}Dto } from './create-${moduleNameFilter.toLocaleLowerCase()}.dto';
 
-export class Update${moduleNameFilter}Dto {
+export class Update${moduleNameFilter}Dto extends PartialType(${moduleNameFilter}Dto){
   
 }
     `;

@@ -6,3 +6,5 @@ export * from './task-variables.dto';
 export * from './variables.dto';
 export * from './create-process-instance.dto';
 export * from './common-search-field.dto';
+export * from './create-process-field.dto';
+export * from './create-submitable-field.dto';

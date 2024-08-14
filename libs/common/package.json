@@ -1,6 +1,6 @@
 {
   "name": "damarhuda-camunda-common",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Camunda Common utilities for NestJS projects",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,9 +19,11 @@
     "@nestjs/mongoose": "^10.0.6",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.4.0",
     "@nestjs/swagger": "^7.4.0",
     "@nestjs/throttler": "^6.0.0",
     "@nestjs/typeorm": "^10.0.2",
+    "@nestjs/websockets": "^10.4.0",
     "bcryptjs": "^2.4.3",
     "bpmn-moddle": "^9.0.1",
     "class-transformer": "^0.5.1",
@@ -45,6 +47,7 @@
     "pino-pretty": "^11.2.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.7.5",
     "typeorm": "^0.3.20",
     "uuid": "^10.0.0"
   },

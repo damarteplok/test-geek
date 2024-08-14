@@ -6,9 +6,6 @@ export class AbstractBpmnOrmEntity<T> extends AbstractOrmEntity<T> {
   processInstanceKey: string;
 
   @Column('varchar', { length: 256, nullable: true })
-  formId: string;
-
-  @Column('varchar', { length: 256, nullable: true })
   taskDefinitionId: string;
 
   @Column('varchar', { length: 256, nullable: true })
