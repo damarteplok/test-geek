@@ -13,6 +13,16 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
 
   protected async afterCreate(entity: T, extraData?: any): Promise<void> {}
 
+  protected async beforeDelete(
+    entity: Partial<T>,
+    extraData?: any,
+  ): Promise<void> {}
+
+  protected async afterDelete(
+    entity: Partial<T>,
+    extraData?: any,
+  ): Promise<void> {}
+
   async create(entity: T, extraData?: any): Promise<T> {
     try {
       await this.beforeCreate(entity, extraData);
@@ -99,11 +109,13 @@ export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
     );
   }
 
-  async remove(attr: Partial<T>): Promise<any> {
+  async remove(attr: Partial<T>, extraData?: any): Promise<any> {
+    await this.beforeDelete(attr, extraData);
     const result = await this.repository.findOneAndDelete(
       attr as FindOptionsWhere<T>,
     );
     if (result.affected) {
+      await this.afterDelete(attr, extraData);
       return { message: 'success', statusCode: 200 };
     }
     throw new InternalServerErrorException();

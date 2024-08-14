@@ -4,7 +4,10 @@ import { PesenKeRestorant } from './models/pesenkerestorant.entity';
 import { Camunda8Service, AbstractOrmService, ProcessModel } from '@app/common';
 
 @Injectable()
-export class PesenKeRestorantService extends AbstractOrmService<PesenKeRestorant> implements ProcessModel {
+export class PesenKeRestorantService
+  extends AbstractOrmService<PesenKeRestorant>
+  implements ProcessModel
+{
   protected readonly repository: PesenKeRestorantRepository;
 
   constructor(
@@ -18,10 +21,10 @@ export class PesenKeRestorantService extends AbstractOrmService<PesenKeRestorant
     // Implementasi logika untuk memulai proses
     try {
       const res = await this.camunda8Service.createProcessInstance({
-        bpmnProcessId: entity.bpmnProcessId
-      })
-      return res
-    } catch(error) {
+        bpmnProcessId: entity.bpmnProcessId,
+      });
+      return res;
+    } catch (error) {
       throw new InternalServerErrorException(error);
     }
   }
@@ -29,15 +32,15 @@ export class PesenKeRestorantService extends AbstractOrmService<PesenKeRestorant
   async startService(): Promise<void> {
     // Implementasi logika untuk memulai layanan
   }
-    
-  protected async beforeCreate(entity: PesenKeRestorant, extraData?: any): Promise<void> {
-    const res = await this.startProcess(entity)
+
+  protected async beforeCreate(
+    entity: PesenKeRestorant,
+    extraData?: any,
+  ): Promise<void> {
+    const res = await this.startProcess(entity);
     entity.processDefinitionKey = res.processDefinitionKey;
     entity.bpmnProcessId = res.bpmnProcessId;
     entity.version = res.version;
     entity.processInstanceKey = res.processInstanceKey;
   }
-  
-  
-  
 }

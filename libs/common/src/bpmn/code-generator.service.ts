@@ -395,6 +395,10 @@ import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLowerCase()}.
 @ApiTags('${moduleNameFilter.toLowerCase()}')
 @ApiBearerAuth()
 export class ${moduleNameFilter}Controller {
+  private fieldsSearching: (keyof ${moduleNameFilter})[] = [];
+  private fieldsShowing: (keyof ${moduleNameFilter})[] = [];
+  private nameRelations: string[] = [];
+
   constructor(private readonly ${moduleNameFilter.toLowerCase()}Service: ${moduleNameFilter}Service) {}
 
   @Post()
@@ -408,9 +412,7 @@ export class ${moduleNameFilter}Controller {
   async findAllPagination(@Query() filter${moduleNameFilter}Dto: Filter${moduleNameFilter}Dto) {
     const where = plainToClass(${moduleNameFilter}, {  });
     const nameTable = '${moduleNameFilter.toLowerCase()}';
-    const searchColumns: (keyof ${moduleNameFilter})[] = [
-      
-    ];
+    const searchColumns: (keyof ${moduleNameFilter})[] = this.fieldsSearching
     return this.${moduleNameFilter.toLowerCase()}Service.findByKeywordsWithPagination(
       filter${moduleNameFilter}Dto.page ?? 1,
       filter${moduleNameFilter}Dto.limit ?? 10,
@@ -418,8 +420,9 @@ export class ${moduleNameFilter}Controller {
       filter${moduleNameFilter}Dto.keywords,
       searchColumns,
       where,
-      [],
+      this.nameRelations,
       filter${moduleNameFilter}Dto.order,
+      this.fieldsShowing
     );
   }
 
@@ -444,7 +447,7 @@ export class ${moduleNameFilter}Controller {
       filter${moduleNameFilter}Dto.page,
       filter${moduleNameFilter}Dto.limit,
       {  },
-      [],
+      this.nameRelations,
       filter${moduleNameFilter}Dto.order,
     );
   }
@@ -456,7 +459,11 @@ export class ${moduleNameFilter}Controller {
     @Body() update${moduleNameFilter}Dto: Update${moduleNameFilter}Dto,
   ) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.${moduleNameFilter.toLowerCase()}Service.update(findDto, update${moduleNameFilter}Dto, []);
+    return this.${moduleNameFilter.toLowerCase()}Service.update(
+      findDto, 
+      update${moduleNameFilter}Dto, 
+      this.nameRelations
+    );
   }
 
   @Delete(':id')

@@ -24,6 +24,13 @@ import { PesenKeRestorant } from './models/pesenkerestorant.entity';
 @ApiTags('pesenkerestorant')
 @ApiBearerAuth()
 export class PesenKeRestorantController {
+  private fieldsSearching: (keyof PesenKeRestorant)[] = [];
+  private fieldsShowing: (keyof PesenKeRestorant)[] = [
+    'processInstanceKey',
+    'processDefinitionKey',
+  ];
+  private nameRelations: string[] = [];
+
   constructor(
     private readonly pesenkerestorantService: PesenKeRestorantService,
   ) {}
@@ -41,11 +48,7 @@ export class PesenKeRestorantController {
   ) {
     const where = plainToClass(PesenKeRestorant, {});
     const nameTable = 'pesenkerestorant';
-    const searchColumns: (keyof PesenKeRestorant)[] = [
-      'version',
-      'processInstanceKey',
-      'processDefinitionKey',
-    ];
+    const searchColumns: (keyof PesenKeRestorant)[] = this.fieldsSearching;
     return this.pesenkerestorantService.findByKeywordsWithPagination(
       filterPesenKeRestorantDto.page ?? 1,
       filterPesenKeRestorantDto.limit ?? 10,
@@ -53,9 +56,9 @@ export class PesenKeRestorantController {
       filterPesenKeRestorantDto.keywords,
       searchColumns,
       where,
-      [],
+      this.nameRelations,
       filterPesenKeRestorantDto.order,
-      ['processInstanceKey', 'processDefinitionKey'],
+      this.fieldsShowing,
     );
   }
 
@@ -80,7 +83,7 @@ export class PesenKeRestorantController {
       filterPesenKeRestorantDto.page,
       filterPesenKeRestorantDto.limit,
       {},
-      [],
+      this.nameRelations,
       filterPesenKeRestorantDto.order,
     );
   }
@@ -95,7 +98,7 @@ export class PesenKeRestorantController {
     return this.pesenkerestorantService.update(
       findDto,
       updatePesenKeRestorantDto,
-      [],
+      this.nameRelations,
     );
   }
 
