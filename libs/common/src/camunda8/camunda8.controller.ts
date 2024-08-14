@@ -79,9 +79,12 @@ export class Camunda8Controller {
       const processElement = this.camunda8Service.getProcessId(bpmnData);
       // get userTask
       const userTaskElement = this.camunda8Service.getUserTaskIds(bpmnData);
+
       // get serviceTask
       const serviceTaskElement =
         this.camunda8Service.getServiceTaskIds(bpmnData);
+      // get bpmnMessage
+      const bpmnMessage = this.camunda8Service.getMessageIds(bpmnData);
 
       const key = `bpmn-${bpmnData.rootElement.id}-${file.originalname}`;
       await this.minioService.uploadFile({
@@ -96,6 +99,7 @@ export class Camunda8Controller {
           userTaskElement,
           serviceTaskElement,
           res,
+          bpmnMessage,
         );
       }
       return { message: 'success', statusCode: 200, data: res };
@@ -106,17 +110,24 @@ export class Camunda8Controller {
 
   private handleAutoGenerate(
     processElement: string,
-    userTaskElements: { name: string; processVariables: string }[],
+    userTaskElements: {
+      name: string;
+      processVariables: string;
+      formId: string;
+    }[],
     serviceTaskElements: string[],
     dataCamunda: DeployCamundaResponse,
+    bpmnMessage: any,
   ) {
     if (processElement) {
       this.bpmnParserService.generateCrud(
         processElement,
         PROCESS,
         '',
+        '',
         serviceTaskElements,
         dataCamunda,
+        bpmnMessage,
       );
     }
 
@@ -126,8 +137,10 @@ export class Camunda8Controller {
           userTask.name,
           USERTASK,
           userTask.processVariables,
+          userTask.formId,
           [],
           dataCamunda,
+          bpmnMessage,
         );
       }
     }

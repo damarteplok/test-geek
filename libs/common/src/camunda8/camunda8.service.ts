@@ -631,6 +631,19 @@ export class Camunda8Service {
         });
       }
     });
+    const arrServiceEndTask = processElement.flowElements.filter(
+      (element) => element.$type === 'bpmn:EndEvent',
+    );
+    arrServiceEndTask.forEach((serviceTask) => {
+      if (
+        serviceTask.extensionElements &&
+        serviceTask.extensionElements.$type === 'bpmn:ExtensionElements'
+      ) {
+        serviceTask.extensionElements.values.forEach((el) => {
+          arrServiceName.push(el.type);
+        });
+      }
+    });
     return arrServiceName;
   }
 
@@ -646,17 +659,50 @@ export class Camunda8Service {
     return processElement.flowElements
       .filter((element) => element.$type === 'bpmn:UserTask')
       .map((userTask) => {
-        if (userTask.documentation?.length) {
-          return {
-            name: userTask.id,
-            processVariables: userTask.documentation[0].text?.toString(),
-          };
-        } else {
-          return {
-            name: userTask.id,
-            processVariables: null,
-          };
+        let processVariables = null;
+        let formId = null;
+        if (userTask?.documentation?.length) {
+          processVariables = userTask.documentation[0].text?.toString();
         }
+
+        if (userTask?.extensionElements?.values?.length) {
+          let arrValues = userTask.extensionElements.values.filter((el) => {
+            return el['$type'] === 'zeebe:formDefinition';
+          });
+          if (arrValues.length) {
+            formId = arrValues[0].formId;
+          }
+        }
+
+        return {
+          name: userTask.id,
+          processVariables,
+          formId,
+        };
+      });
+  }
+
+  getMessageIds(bpmnData: any): UserTaskInfo[] {
+    const processElement = bpmnData.rootElement.rootElements.find(
+      (element) =>
+        element.$type === 'bpmn:Message' && element.extensionElements,
+    );
+
+    if (!processElement) {
+      return [];
+    }
+
+    if (processElement.extensionElements.$type !== 'bpmn:ExtensionElements') {
+      return [];
+    }
+
+    return processElement.extensionElements.values
+      .filter((element) => element.$type === 'zeebe:subscription')
+      .map((el) => {
+        return {
+          name: processElement.name,
+          correlationKey: el.correlationKey,
+        };
       });
   }
 
@@ -752,6 +798,22 @@ export class Camunda8Service {
           }
         }),
       );
+  }
+
+  async publishStartMessageJob(
+    serviceName: string,
+    correlationKey: string,
+  ): Promise<void> {
+    const zeebe: ZeebeGrpcClient = this.client.getZeebeGrpcApiClient();
+    const messageId: string = uuidv4();
+    zeebe.publishMessage({
+      name: serviceName,
+      correlationKey: correlationKey,
+      variables: {
+        id: messageId,
+      },
+      timeToLive: 10 * 60 * 1000,
+    });
   }
 
   // optimise

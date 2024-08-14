@@ -4,6 +4,7 @@ import { MethodList } from '../config';
 export interface UserTaskInfo {
   name: string;
   processVariables: string | undefined;
+  formId: string | undefined;
 }
 
 export interface Filter {
@@ -111,4 +112,15 @@ export interface DeployCamundaResponse {
   processDefinitionKey: string;
   resourceName: string;
   tenantId: string;
+}
+
+export interface ProcessModel {
+  startProcess(): Promise<void>;
+  startService(): Promise<void>;
+}
+
+export interface SubmittableModel {
+  submitTask(): Promise<void>;
+  removeTask?(): Promise<void>;
+  revertTask?(): Promise<void>;
 }

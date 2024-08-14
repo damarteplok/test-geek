@@ -9,8 +9,19 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 export abstract class AbstractOrmService<T extends AbstractOrmEntity<T>> {
   protected abstract readonly repository: AbstractOrmRepository<T>;
 
-  async create(entity: T): Promise<T> {
-    return this.repository.create(entity);
+  protected async beforeCreate(entity: T, extraData?: any): Promise<void> {}
+
+  protected async afterCreate(entity: T, extraData?: any): Promise<void> {}
+
+  async create(entity: T, extraData?: any): Promise<T> {
+    try {
+      await this.beforeCreate(entity, extraData);
+      const createdEntity = await this.repository.create(entity);
+      await this.afterCreate(createdEntity, extraData);
+      return createdEntity;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async find(attrs: Partial<T>): Promise<T[]> {

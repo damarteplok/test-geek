@@ -195,6 +195,7 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
 
   private generateModelsUserTask(
     processVariables: string = '',
+    formId: string = '',
     dataCamunda: DeployCamundaResponse | undefined = undefined,
   ): string {
     const nameParent = dataCamunda
@@ -211,6 +212,9 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
   @Column('varchar', { length: 256, nullable: true, default: "${dataCamunda?.processDefinitionKey}" })
   processDefinitionKey: string;
 
+  @Column('varchar', { length: 256, nullable: true, default: "${formId}" })
+  formId: string;
+
   @Column({ type: 'text', nullable: true, default: '${JSON.stringify(processVariables)}' })
   processVariables: string;
   ${oneToOneStr}
@@ -220,6 +224,7 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
   private generateModelsServiceTask(
     serviceTaskElement: string[] = [],
     dataCamunda: DeployCamundaResponse | undefined = undefined,
+    bpmnMessage: any = [],
   ): string {
     return `
   @Column('varchar', { length: 256, default: "${dataCamunda?.processDefinitionKey}" })
@@ -236,6 +241,9 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
 
   @Column('varchar', { length: 256, nullable: true, default: "${serviceTaskElement.join()}" })
   servicesTask: string;
+
+  @Column({ type: 'text', nullable: true, default: '${JSON.stringify(bpmnMessage)}' })
+  messageServices: string;
   `;
   }
 
@@ -243,8 +251,10 @@ export class Filter${moduleNameFilter}Dto extends PartialType(CommonSearchFieldD
     moduleName: string,
     typeGenerate: string = '',
     processVariables: string = '',
+    formId: string = '',
     serviceTaskElement: string[] = [],
     dataCamunda: DeployCamundaResponse | undefined = undefined,
+    bpmnMessage: any = undefined,
   ): void {
     const moduleDir = this.generateFolder(moduleName, 'models');
     const moduleNameFilter = this.toPascalCase(moduleName);
@@ -258,8 +268,8 @@ ${typeGenerate === USERTASK && dataCamunda?.bpmnProcessId ? `import { ${this.toP
 })
 ${typeGenerate === PROCESS && dataCamunda?.bpmnProcessId ? `@Unique(['bpmnProcessId'])` : ''}
 export class ${moduleNameFilter} extends ${typeGenerate === '' ? 'AbstractOrmEntity' : 'AbstractBpmnOrmEntity'}<${moduleNameFilter}> {
-  ${typeGenerate === USERTASK ? this.generateModelsUserTask(processVariables, dataCamunda) : ''}
-  ${typeGenerate === PROCESS ? this.generateModelsServiceTask(serviceTaskElement, dataCamunda) : ''}
+  ${typeGenerate === USERTASK ? this.generateModelsUserTask(processVariables, formId, dataCamunda) : ''}
+  ${typeGenerate === PROCESS ? this.generateModelsServiceTask(serviceTaskElement, dataCamunda, bpmnMessage) : ''}
 }
 
     `;
@@ -459,22 +469,42 @@ export class ${moduleNameFilter}Controller {
     );
   }
 
-  private generateService(moduleName: string): void {
+  private generateService(moduleName: string, typeGenerate: string = ''): void {
     const moduleDir = this.generateFolder(moduleName);
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
 import { Injectable } from '@nestjs/common';
 import { ${moduleNameFilter}Repository } from './${moduleNameFilter.toLowerCase()}.repository';
 import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLocaleLowerCase()}.entity';
-import { AbstractOrmService } from '@app/common';
+import { AbstractOrmService${typeGenerate === PROCESS ? ', ProcessModel' : ''}${typeGenerate === USERTASK ? ', SubmittableModel' : ''} } from '@app/common';
 
 @Injectable()
-export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameFilter}> {
+export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameFilter}>${typeGenerate === PROCESS ? ' implements ProcessModel' : ''}${typeGenerate === USERTASK ? ' implements SubmittableModel' : ''} {
   protected readonly repository: ${moduleNameFilter}Repository;
 
   constructor(${moduleNameFilter.toLocaleLowerCase()}Repository: ${moduleNameFilter}Repository) {
     super();
     this.repository = ${moduleNameFilter.toLocaleLowerCase()}Repository;
+  }
+  ${
+    typeGenerate === PROCESS
+      ? `async startProcess(): Promise<void> {
+    // Implementasi logika untuk memulai proses
+  }
+
+  async startService(): Promise<void> {
+    // Implementasi logika untuk memulai layanan
+  }`
+      : ''
+  }
+  ${
+    typeGenerate === USERTASK
+      ? `async submitTask(): Promise<void> {
+    // Implementasi logika untuk memulai submit
+  }
+
+  `
+      : ''
   }
 }
 
@@ -489,20 +519,24 @@ export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameF
     moduleName: string,
     bpmn: string = '',
     processVariables: string = '',
+    formId: string = '',
     serviceTaskElement: string[] = [],
     dataCamunda: DeployCamundaResponse | undefined = undefined,
+    bpmnMessage: any = undefined,
   ): void {
     this.generateFolder(moduleName);
     this.generateModels(
       moduleName,
       bpmn,
       processVariables,
+      formId,
       serviceTaskElement,
       dataCamunda,
+      bpmnMessage,
     );
     this.generateDtos(moduleName, bpmn);
     this.generateRepository(moduleName);
-    this.generateService(moduleName);
+    this.generateService(moduleName, bpmn);
     this.generateController(moduleName);
     this.generateModule(moduleName);
   }
