@@ -71,8 +71,6 @@ export class UsersController {
         'name',
         'address',
         'contact',
-        'created_at',
-        'updated_at',
         'avatar',
         'status',
       ],

@@ -44,7 +44,6 @@ export class UsersService extends AbstractOrmService<User> {
     try {
       await this.repository.findOne({
         email: createUserDto.email,
-        deleted_at: null,
       });
     } catch (err) {
       return;
@@ -56,7 +55,6 @@ export class UsersService extends AbstractOrmService<User> {
     const user = await this.repository.findOne(
       {
         email,
-        deleted_at: null,
       },
       ['role', 'role.permission'],
     );
@@ -71,7 +69,6 @@ export class UsersService extends AbstractOrmService<User> {
     return this.repository.findOne(
       {
         id: getUserDto.id,
-        deleted_at: null,
       },
       ['role', 'role.permission'],
     );

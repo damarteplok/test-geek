@@ -1,6 +1,6 @@
 import {
-  Column,
   CreateDateColumn,
+  DeleteDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,21 +13,12 @@ export class AbstractOrmEntity<T> {
     Object.assign(this, entity);
   }
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    nullable: false,
-  })
-  created_at: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
-  @UpdateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    nullable: false,
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updated_at: Date;
+  @UpdateDateColumn()
+  updatedAt: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
-  deleted_at: Date;
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

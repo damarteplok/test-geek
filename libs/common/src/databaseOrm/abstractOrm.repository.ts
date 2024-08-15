@@ -70,12 +70,21 @@ export abstract class AbstractOrmRepository<T extends AbstractOrmEntity<T>> {
   }
 
   async findOneAndDelete(where: FindOptionsWhere<T>): Promise<DeleteResult> {
-    const deleteResult = await this.entityRepository.delete(where);
+    const deleteResult = await this.entityRepository.softDelete(where);
     if (!deleteResult.affected) {
       this.logger.warn(`Entity was not found with where`, where);
       throw new NotFoundException('Entity was not found');
     }
     return deleteResult;
+  }
+
+  async restore(where: FindOptionsWhere<T>): Promise<any> {
+    const restore = await this.entityRepository.restore(where);
+    if (!restore.affected) {
+      this.logger.warn(`Entity restore was not found with where`, where);
+      throw new NotFoundException('Entity was not found');
+    }
+    return restore;
   }
 
   async findByWithPagination(
