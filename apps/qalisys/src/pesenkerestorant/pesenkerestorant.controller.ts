@@ -12,28 +12,31 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
 import { PesenKeRestorantDto } from './dtos/pesenkerestorant.dto';
-import { Serialize, FindDto, JwtAuthGuard } from '@app/common';
+import { 
+  Serialize, 
+  FindDto, 
+  JwtAuthGuard,
+  PermissionsGuard,
+  SUPERADMIN,
+  Roles, 
+} from '@app/common';
 import { PesenKeRestorantService } from './pesenkerestorant.service';
 import { CreatePesenKeRestorantDto } from './dtos/create-pesenkerestorant.dto';
 import { FilterPesenKeRestorantDto } from './dtos/filter-pesenkerestorant.dto';
 import { UpdatePesenKeRestorantDto } from './dtos/update-pesenkerestorant.dto';
 import { PesenKeRestorant } from './models/pesenkerestorant.entity';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@Roles(SUPERADMIN)
 @Controller('pesenkerestorant')
 @ApiTags('pesenkerestorant')
 @ApiBearerAuth()
 export class PesenKeRestorantController {
   private fieldsSearching: (keyof PesenKeRestorant)[] = [];
-  private fieldsShowing: (keyof PesenKeRestorant)[] = [
-    'processInstanceKey',
-    'processDefinitionKey',
-  ];
+  private fieldsShowing: (keyof PesenKeRestorant)[] = [];
   private nameRelations: string[] = [];
 
-  constructor(
-    private readonly pesenkerestorantService: PesenKeRestorantService,
-  ) {}
+  constructor(private readonly pesenkerestorantService: PesenKeRestorantService) {}
 
   @Post()
   @Serialize(PesenKeRestorantDto)
@@ -43,12 +46,10 @@ export class PesenKeRestorantController {
   }
 
   @Get()
-  async findAllPagination(
-    @Query() filterPesenKeRestorantDto: FilterPesenKeRestorantDto,
-  ) {
-    const where = plainToClass(PesenKeRestorant, {});
+  async findAllPagination(@Query() filterPesenKeRestorantDto: FilterPesenKeRestorantDto) {
+    const where = plainToClass(PesenKeRestorant, {  });
     const nameTable = 'pesenkerestorant';
-    const searchColumns: (keyof PesenKeRestorant)[] = this.fieldsSearching;
+    const searchColumns: (keyof PesenKeRestorant)[] = this.fieldsSearching
     return this.pesenkerestorantService.findByKeywordsWithPagination(
       filterPesenKeRestorantDto.page ?? 1,
       filterPesenKeRestorantDto.limit ?? 10,
@@ -58,14 +59,14 @@ export class PesenKeRestorantController {
       where,
       this.nameRelations,
       filterPesenKeRestorantDto.order,
-      this.fieldsShowing,
+      this.fieldsShowing
     );
   }
 
   @Get('all')
   @Serialize(PesenKeRestorantDto)
   async findAll() {
-    return this.pesenkerestorantService.find({});
+    return this.pesenkerestorantService.find({  });
   }
 
   @Get(':id')
@@ -82,7 +83,7 @@ export class PesenKeRestorantController {
     return this.pesenkerestorantService.findByWithPagination(
       filterPesenKeRestorantDto.page,
       filterPesenKeRestorantDto.limit,
-      {},
+      {  },
       this.nameRelations,
       filterPesenKeRestorantDto.order,
     );
@@ -96,9 +97,9 @@ export class PesenKeRestorantController {
   ) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.pesenkerestorantService.update(
-      findDto,
-      updatePesenKeRestorantDto,
-      this.nameRelations,
+      findDto, 
+      updatePesenKeRestorantDto, 
+      this.nameRelations
     );
   }
 

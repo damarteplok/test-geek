@@ -12,18 +12,30 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
 import { DecideDinnerDto } from './dtos/decidedinner.dto';
-import { Serialize, FindDto, JwtAuthGuard } from '@app/common';
+import { 
+  Serialize, 
+  FindDto, 
+  JwtAuthGuard,
+  PermissionsGuard,
+  SUPERADMIN,
+  Roles, 
+} from '@app/common';
 import { DecideDinnerService } from './decidedinner.service';
 import { CreateDecideDinnerDto } from './dtos/create-decidedinner.dto';
 import { FilterDecideDinnerDto } from './dtos/filter-decidedinner.dto';
 import { UpdateDecideDinnerDto } from './dtos/update-decidedinner.dto';
 import { DecideDinner } from './models/decidedinner.entity';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@Roles(SUPERADMIN)
 @Controller('decidedinner')
 @ApiTags('decidedinner')
 @ApiBearerAuth()
 export class DecideDinnerController {
+  private fieldsSearching: (keyof DecideDinner)[] = [];
+  private fieldsShowing: (keyof DecideDinner)[] = [];
+  private nameRelations: string[] = [];
+
   constructor(private readonly decidedinnerService: DecideDinnerService) {}
 
   @Post()
@@ -37,9 +49,7 @@ export class DecideDinnerController {
   async findAllPagination(@Query() filterDecideDinnerDto: FilterDecideDinnerDto) {
     const where = plainToClass(DecideDinner, {  });
     const nameTable = 'decidedinner';
-    const searchColumns: (keyof DecideDinner)[] = [
-      
-    ];
+    const searchColumns: (keyof DecideDinner)[] = this.fieldsSearching
     return this.decidedinnerService.findByKeywordsWithPagination(
       filterDecideDinnerDto.page ?? 1,
       filterDecideDinnerDto.limit ?? 10,
@@ -47,9 +57,16 @@ export class DecideDinnerController {
       filterDecideDinnerDto.keywords,
       searchColumns,
       where,
-      [],
+      this.nameRelations,
       filterDecideDinnerDto.order,
+      this.fieldsShowing
     );
+  }
+
+  @Get('all')
+  @Serialize(DecideDinnerDto)
+  async findAll() {
+    return this.decidedinnerService.find({  });
   }
 
   @Get(':id')
@@ -57,12 +74,6 @@ export class DecideDinnerController {
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.decidedinnerService.findOne(findDto);
-  }
-
-  @Get('all')
-  @Serialize(DecideDinnerDto)
-  async findAll() {
-    return this.decidedinnerService.find({  });
   }
 
   @Post('search')
@@ -73,7 +84,7 @@ export class DecideDinnerController {
       filterDecideDinnerDto.page,
       filterDecideDinnerDto.limit,
       {  },
-      [],
+      this.nameRelations,
       filterDecideDinnerDto.order,
     );
   }
@@ -85,7 +96,11 @@ export class DecideDinnerController {
     @Body() updateDecideDinnerDto: UpdateDecideDinnerDto,
   ) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.decidedinnerService.update(findDto, updateDecideDinnerDto, []);
+    return this.decidedinnerService.update(
+      findDto, 
+      updateDecideDinnerDto, 
+      this.nameRelations
+    );
   }
 
   @Delete(':id')

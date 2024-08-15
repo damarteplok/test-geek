@@ -20,6 +20,9 @@ import { FilterRoleDto } from './dto/filter-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleService } from './role.service';
 import { RoleEntity } from './models/role.entity';
+import { PermissionsGuard } from '../auth';
+import { Roles } from '../decorator';
+import { SUPERADMIN } from '../constants/camunda.constant';
 
 @UseGuards(JwtAuthGuard)
 @Controller('roles')

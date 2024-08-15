@@ -56,8 +56,13 @@ export class PermissionsGuard implements CanActivate {
       for (const role of user.role) {
         if (role.permission && role.permission.length > 0) {
           const hasPermission = role.permission.some(
-            (permission) =>
-              permission.path === path && permission.method === method,
+            (permission) => {
+              if (permission.path === '*') {
+                return permission.method === method;
+              } else {
+                return permission.path === path && permission.method === method;
+              }
+            },
             // permission.method === method,
           );
           if (hasPermission) {

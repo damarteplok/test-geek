@@ -33,12 +33,12 @@ export class RoleDto {
   @Transform(({ value }) =>
     DateTime.fromJSDate(value).toFormat('yyyy-MM-dd HH:mm'),
   )
-  created_at: Date;
+  createdAt: Date;
 
   @ApiProperty()
   @Expose()
   @Transform(({ value }) =>
     DateTime.fromJSDate(value).toFormat('yyyy-MM-dd HH:mm'),
   )
-  updated_at: Date;
+  updatedAt: Date;
 }

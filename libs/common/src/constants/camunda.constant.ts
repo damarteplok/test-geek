@@ -12,3 +12,4 @@ export const TASKLIST_TASK_URL = '/v1/tasks';
 export const TASKLIST_VARIABLE_URL = '/v1/variables';
 export const PROCESS = 'Process';
 export const USERTASK = 'UserTask';
+export const SUPERADMIN = 'superadmin';

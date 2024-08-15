@@ -12,18 +12,30 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
 import { MintaBilingDto } from './dtos/mintabiling.dto';
-import { Serialize, FindDto, JwtAuthGuard } from '@app/common';
+import { 
+  Serialize, 
+  FindDto, 
+  JwtAuthGuard,
+  PermissionsGuard,
+  SUPERADMIN,
+  Roles, 
+} from '@app/common';
 import { MintaBilingService } from './mintabiling.service';
 import { CreateMintaBilingDto } from './dtos/create-mintabiling.dto';
 import { FilterMintaBilingDto } from './dtos/filter-mintabiling.dto';
 import { UpdateMintaBilingDto } from './dtos/update-mintabiling.dto';
 import { MintaBiling } from './models/mintabiling.entity';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@Roles(SUPERADMIN)
 @Controller('mintabiling')
 @ApiTags('mintabiling')
 @ApiBearerAuth()
 export class MintaBilingController {
+  private fieldsSearching: (keyof MintaBiling)[] = [];
+  private fieldsShowing: (keyof MintaBiling)[] = [];
+  private nameRelations: string[] = [];
+
   constructor(private readonly mintabilingService: MintaBilingService) {}
 
   @Post()
@@ -37,9 +49,7 @@ export class MintaBilingController {
   async findAllPagination(@Query() filterMintaBilingDto: FilterMintaBilingDto) {
     const where = plainToClass(MintaBiling, {  });
     const nameTable = 'mintabiling';
-    const searchColumns: (keyof MintaBiling)[] = [
-      
-    ];
+    const searchColumns: (keyof MintaBiling)[] = this.fieldsSearching
     return this.mintabilingService.findByKeywordsWithPagination(
       filterMintaBilingDto.page ?? 1,
       filterMintaBilingDto.limit ?? 10,
@@ -47,9 +57,16 @@ export class MintaBilingController {
       filterMintaBilingDto.keywords,
       searchColumns,
       where,
-      [],
+      this.nameRelations,
       filterMintaBilingDto.order,
+      this.fieldsShowing
     );
+  }
+
+  @Get('all')
+  @Serialize(MintaBilingDto)
+  async findAll() {
+    return this.mintabilingService.find({  });
   }
 
   @Get(':id')
@@ -57,12 +74,6 @@ export class MintaBilingController {
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
     return this.mintabilingService.findOne(findDto);
-  }
-
-  @Get('all')
-  @Serialize(MintaBilingDto)
-  async findAll() {
-    return this.mintabilingService.find({  });
   }
 
   @Post('search')
@@ -73,7 +84,7 @@ export class MintaBilingController {
       filterMintaBilingDto.page,
       filterMintaBilingDto.limit,
       {  },
-      [],
+      this.nameRelations,
       filterMintaBilingDto.order,
     );
   }
@@ -85,7 +96,11 @@ export class MintaBilingController {
     @Body() updateMintaBilingDto: UpdateMintaBilingDto,
   ) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
-    return this.mintabilingService.update(findDto, updateMintaBilingDto, []);
+    return this.mintabilingService.update(
+      findDto, 
+      updateMintaBilingDto, 
+      this.nameRelations
+    );
   }
 
   @Delete(':id')

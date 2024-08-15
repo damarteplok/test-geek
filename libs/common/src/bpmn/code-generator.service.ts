@@ -99,13 +99,13 @@ export class ${moduleNameFilter}Dto {
   @Transform(({ value }) =>
     DateTime.fromJSDate(value).toFormat('yyyy-MM-dd HH:mm'),
   )
-  created_at: Date;
+  createdAt: Date;
 
   @Expose()
   @Transform(({ value }) =>
     DateTime.fromJSDate(value).toFormat('yyyy-MM-dd HH:mm'),
   )
-  updated_at: Date;
+  updatedAt: Date;
 }
     `;
 
@@ -383,14 +383,22 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
 import { ${moduleNameFilter}Dto } from './dtos/${moduleNameFilter.toLowerCase()}.dto';
-import { Serialize, FindDto, JwtAuthGuard } from '@app/common';
+import { 
+  Serialize, 
+  FindDto, 
+  JwtAuthGuard,
+  PermissionsGuard,
+  SUPERADMIN,
+  Roles, 
+} from '@app/common';
 import { ${moduleNameFilter}Service } from './${moduleNameFilter.toLowerCase()}.service';
 import { Create${moduleNameFilter}Dto } from './dtos/create-${moduleNameFilter.toLowerCase()}.dto';
 import { Filter${moduleNameFilter}Dto } from './dtos/filter-${moduleNameFilter.toLowerCase()}.dto';
 import { Update${moduleNameFilter}Dto } from './dtos/update-${moduleNameFilter.toLowerCase()}.dto';
 import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLowerCase()}.entity';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@Roles(SUPERADMIN)
 @Controller('${moduleNameFilter.toLowerCase()}')
 @ApiTags('${moduleNameFilter.toLowerCase()}')
 @ApiBearerAuth()
@@ -545,7 +553,6 @@ export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameF
     extraData?: any,
   ): Promise<void> {
     try {
-      console.log(entity, 'entity');
       await this.camunda8Service.cancelProcessInstance(
         entity.processInstanceKey,
       );

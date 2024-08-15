@@ -36,6 +36,7 @@ import { FindDto } from '../dto';
 import { USERS_AVATAR } from '../constants';
 import { Roles } from '../decorator';
 import { PermissionsGuard } from '../auth/guards/permission.guard';
+import { SUPERADMIN } from '../constants/camunda.constant';
 
 @Controller('users')
 @ApiTags('users')
@@ -46,14 +47,18 @@ export class UsersController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(SUPERADMIN)
   @Serialize(UserDto)
   async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(SUPERADMIN)
   async findAllPagination(@Query() filterUserDto: FilterUserDto) {
+    console.log(__dirname + '/migrations/**/*{.ts,.js}');
     const where = plainToClass(User, {});
     const nameTable = 'users';
     const searchColumns: (keyof User)[] = ['name', 'address', 'contact'];
@@ -66,20 +71,14 @@ export class UsersController {
       where,
       ['role'],
       filterUserDto.order,
-      [
-        'id',
-        'name',
-        'address',
-        'contact',
-        'avatar',
-        'status',
-      ],
+      ['id', 'name', 'address', 'contact', 'avatar', 'status'],
     );
     return plainToClass(UserDto, results);
   }
 
   @Get('all')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(SUPERADMIN)
   @Serialize(UserDto)
   async findAllNoPagination() {
     const where = plainToClass(User, {});
@@ -87,7 +86,8 @@ export class UsersController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(SUPERADMIN)
   @Serialize(UserDto)
   async findOne(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
@@ -95,7 +95,8 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(SUPERADMIN)
   @Serialize(UserDto)
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     if (!id) {
@@ -107,7 +108,8 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(SUPERADMIN)
   @Serialize(UserDto)
   async remove(@Param('id') id: string) {
     const findDto = plainToClass(FindDto, { id: parseInt(id, 10) });
@@ -116,7 +118,8 @@ export class UsersController {
 
   @Patch('avatar/:id')
   @UseInterceptors(FileInterceptor('file'))
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(SUPERADMIN)
   @Serialize(UserDto)
   async updateAvatar(
     @Param('id') id: string,
@@ -153,7 +156,7 @@ export class UsersController {
 
   @Get('avatar/:id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Roles('admin', 'user')
+  @Roles(SUPERADMIN)
   async getAvatar(
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,
