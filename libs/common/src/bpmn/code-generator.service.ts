@@ -488,7 +488,7 @@ export class ${moduleNameFilter}Controller {
     const moduleDir = this.generateFolder(moduleName);
     const moduleNameFilter = this.toPascalCase(moduleName);
     const moduleContent = `
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ${moduleNameFilter}Repository } from './${moduleNameFilter.toLowerCase()}.repository';
 import { ${moduleNameFilter} } from './models/${moduleNameFilter.toLocaleLowerCase()}.entity';
 import { Camunda8Service, AbstractOrmService${typeGenerate === PROCESS ? ', ProcessModel' : ''}${typeGenerate === USERTASK ? ', SubmittableModel' : ''} } from '@app/common';
@@ -534,17 +534,10 @@ export class ${moduleNameFilter}Service extends AbstractOrmService<${moduleNameF
     entity: Partial<${moduleNameFilter}>,
     extraData?: any,
   ): Promise<void> {
-    try {
-      // check if have valid data in db
-      const res = await this.repository.findOne(entity);
-      if (!res) {
-        throw new NotFoundException('Data not found');
-      }
-      // init processInstance
-      entity.processInstanceKey = res.processInstanceKey;
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+    // check if have valid data in db
+    const res = await this.repository.findOne(entity);
+    // init processInstance
+    entity.processInstanceKey = res.processInstanceKey;
   }
 
   protected async afterDelete(
