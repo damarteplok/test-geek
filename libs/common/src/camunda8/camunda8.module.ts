@@ -6,7 +6,6 @@ import { BpmnParserService, CodeGeneratorService } from '../bpmn';
 import { MinioService } from '../minio';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
-import { TelegramService } from './telegram.service';
 import { MailerService, MailModule } from '../mailer';
 
 @Module({
@@ -41,7 +40,6 @@ import { MailerService, MailModule } from '../mailer';
     BpmnParserService,
     CodeGeneratorService,
     MinioService,
-    TelegramService,
     MailerService,
   ],
   controllers: [Camunda8Controller],
@@ -50,7 +48,6 @@ import { MailerService, MailModule } from '../mailer';
     MinioService,
     BpmnParserService,
     CodeGeneratorService,
-    TelegramService,
   ],
 })
 export class Camunda8Module {}

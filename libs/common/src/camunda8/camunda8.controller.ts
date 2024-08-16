@@ -14,11 +14,18 @@ import {
   Delete,
   Query,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
 import { BpmnParserService, BpmnValidator } from '../bpmn';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MinioService } from '../minio/minio.service';
-import { PROCESS, SUCCESS, USERS_BUCKET, USERTASK } from '../constants';
+import {
+  PROCESS,
+  SUCCESS,
+  SUPERADMIN,
+  USERS_BUCKET,
+  USERTASK,
+} from '../constants';
 import { Camunda8Service } from './camunda8.service';
 import {
   CreateProcessInstanceDto,
@@ -29,7 +36,12 @@ import {
   VariablesDto,
 } from '../dto';
 import { DeployCamundaResponse } from '../interfaces';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/guards/permission.guard';
+import { Roles } from '../decorator';
 
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@Roles(SUPERADMIN)
 @Controller('camunda')
 export class Camunda8Controller {
   constructor(

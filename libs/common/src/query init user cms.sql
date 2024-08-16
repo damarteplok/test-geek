@@ -16,6 +16,3 @@ INSERT INTO "role_permission" ("roleId", "permissionId")
         (1, 2),
         (1, 3),
         (1, 4);
-        
-
-        

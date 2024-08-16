@@ -58,7 +58,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Roles(SUPERADMIN)
   async findAllPagination(@Query() filterUserDto: FilterUserDto) {
-    console.log(__dirname + '/migrations/**/*{.ts,.js}');
     const where = plainToClass(User, {});
     const nameTable = 'users';
     const searchColumns: (keyof User)[] = ['name', 'address', 'contact'];
